@@ -1,0 +1,2 @@
+fix the student adding issue make it fixed and error free its occuring again and again fix that and also their is  blank space in the popup where we hide the student id so fill that gap by moving and making the popup layout perfect
+2.Also analyze and fix if there is any error when adding to supa base
