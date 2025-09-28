@@ -24,7 +24,6 @@ interface Exam {
   start_time: string
   end_time: string
   status: 'draft' | 'scheduled' | 'published' | 'ongoing' | 'completed' | 'cancelled'
-  hall: { name: string; capacity: number }
   registrations: number
   allocations: number
   departments: string[]
@@ -55,7 +54,6 @@ export default function AdminExamsPage() {
         .from('exams')
         .select(`
           *,
-          hall:exam_halls(name, capacity),
           departments:exam_departments(
             department:departments(name)
           )
@@ -72,10 +70,6 @@ export default function AdminExamsPage() {
         start_time: exam.start_time,
         end_time: exam.end_time,
         status: exam.status,
-        hall: { 
-          name: exam.hall?.name || 'TBD', 
-          capacity: exam.hall?.capacity || 0 
-        },
         registrations: exam.registered_students || 0,
         allocations: exam.allocated_students || 0,
         departments: exam.departments?.map((d: any) => d.department.name) || [],
@@ -84,7 +78,7 @@ export default function AdminExamsPage() {
 
       setExams(examsWithDetails)
     } catch (error) {
-      console.error('Error fetching exams:', error)
+      // Handle error silently
     }
   }
 
@@ -262,7 +256,7 @@ export default function AdminExamsPage() {
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4 text-gray-500" />
                         <span className="text-sm text-gray-600 dark:text-gray-300">
-                          {exam.hall.name} ({exam.hall.capacity} seats)
+                          Hall allocation pending
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -372,7 +366,7 @@ export default function AdminExamsPage() {
                         <div className="flex items-center gap-2">
                           <MapPin className="h-4 w-4 text-gray-500" />
                           <span className="text-sm text-gray-600 dark:text-gray-300">
-                            {exam.hall.name} ({exam.hall.capacity} seats)
+                            Hall allocation pending
                           </span>
                         </div>
                         <div className="flex items-center gap-2">

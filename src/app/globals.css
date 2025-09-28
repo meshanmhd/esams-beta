@@ -215,4 +215,6 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;  /* Safari and Chrome */
   }
+  
+  /* Modal styles - using inline styles instead to avoid conflicts */
 }

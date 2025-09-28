@@ -1,7 +1,6 @@
 'use client'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { AuthProvider } from '@/contexts/auth-context'
 import { DataRefreshProvider } from '@/contexts/data-refresh-context'
 import { ErrorBoundary } from '@/components/error-boundary'
@@ -29,7 +28,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <AuthProvider>
           <DataRefreshProvider>
             {children}
-            <ReactQueryDevtools initialIsOpen={false} />
           </DataRefreshProvider>
         </AuthProvider>
       </QueryClientProvider>

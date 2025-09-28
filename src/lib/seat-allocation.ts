@@ -76,14 +76,19 @@ export class SeatAllocator {
    * Implements collision group constraints and optimal distribution
    */
   public allocateSeats(): AllocationResult {
+    // Starting seat allocation process
+    
     // Sort students by department for better grouping
     const sortedStudents = this.sortStudentsByDepartment()
+    // Students sorted by department
     
     // Initialize seats for all halls
     const hallSeats = this.initializeSeats()
+    // Seats initialized for all halls
     
     // Allocate students to seats
     const allocationResult = this.allocateStudentsToSeats(sortedStudents, hallSeats)
+    // Allocation completed
     
     return allocationResult
   }
@@ -121,7 +126,7 @@ export class SeatAllocator {
           if (hall.seating_type === 'double') {
             // For double seating, create two seats per position (left and right)
             seats.push({
-              id: `${hall.id}-${row}-${col}-left`,
+              id: `temp-${hall.id}-${row}-${col}-left`,
               row_number: row,
               column_number: col,
               seat_number: seatNumber.toString().padStart(3, '0'),
@@ -131,7 +136,7 @@ export class SeatAllocator {
             })
             seatNumber++
             seats.push({
-              id: `${hall.id}-${row}-${col}-right`,
+              id: `temp-${hall.id}-${row}-${col}-right`,
               row_number: row,
               column_number: col,
               seat_number: seatNumber.toString().padStart(3, '0'),
@@ -143,7 +148,7 @@ export class SeatAllocator {
           } else {
             // For single seating, one seat per position
             seats.push({
-              id: `${hall.id}-${row}-${col}`,
+              id: `temp-${hall.id}-${row}-${col}`,
               row_number: row,
               column_number: col,
               seat_number: seatNumber.toString().padStart(3, '0'),
@@ -182,6 +187,9 @@ export class SeatAllocator {
       result.allocation_summary.total_capacity += hall.capacity
     })
 
+    // Maintain a single student index across halls so allocation continues hall-to-hall
+    let studentIndex = 0
+
     // Process each hall
     this.halls.forEach(hall => {
       const seats = hallSeats.get(hall.id) || []
@@ -194,9 +202,6 @@ export class SeatAllocator {
       }
 
       // Allocate students to this hall
-      let studentIndex = 0
-      const remainingStudents = students.slice(studentIndex)
-      
       for (const seat of seats) {
         if (studentIndex >= students.length) break
         
@@ -216,7 +221,7 @@ export class SeatAllocator {
     })
 
     // Add unallocated students
-    result.unallocated_students = students.slice(studentIndex)
+    result.unallocated_students = students.slice(result.halls.reduce((sum, h) => sum + h.allocated_students, 0))
     result.allocation_summary.allocated_students = students.length - result.unallocated_students.length
     result.allocation_summary.unallocated_students = result.unallocated_students.length
     result.allocation_summary.utilization_rate = 

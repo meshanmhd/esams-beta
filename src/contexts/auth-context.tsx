@@ -58,8 +58,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchProfile = async (userId: string) => {
     try {
-      console.log('Fetching profile for user:', userId)
-      
       // Try to fetch by auth_user_id first (for admin users)
       let { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -80,14 +78,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       if (profileError) {
-        console.error('Error fetching profile:', profileError)
         setProfile(null)
       } else {
-        console.log('Profile fetched successfully:', profileData)
         setProfile(profileData)
       }
     } catch (error) {
-      console.error('Error fetching profile:', error)
       setProfile(null)
     } finally {
       setLoading(false)
@@ -146,8 +141,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(true)
     
     try {
-      console.log('Attempting login for email:', email)
-      
       // First check if user exists in profiles table
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -155,10 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('email', email)
         .single()
       
-      console.log('Profile query result:', { profileData, profileError })
-      
       if (profileError) {
-        console.error('Profile query error:', profileError)
         setLoading(false)
         
         // Check if it's a "no rows found" error
@@ -170,12 +160,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (!profileData) {
-        console.log('No profile data returned')
         setLoading(false)
         return { error: new Error('User not found. Please contact administrator.') }
       }
-
-      console.log('Profile found:', profileData)
 
       // Check if user is active
       if (!profileData.is_active) {
@@ -185,14 +172,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Handle admin login
       if (profileData.role === 'admin') {
-        console.log('Attempting admin login...')
         try {
           const { data: authData, error: adminError } = await supabase.auth.signInWithPassword({
             email,
             password,
           })
-
-          console.log('Admin auth result:', { authData, adminError })
 
           if (adminError) {
             setLoading(false)
@@ -202,7 +186,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (authData.user) {
             // Update profile with auth_user_id if not set
             if (!profileData.auth_user_id) {
-              console.log('Updating profile with auth_user_id...')
               await supabase
                 .from('profiles')
                 .update({ auth_user_id: authData.user.id })
@@ -213,11 +196,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(authData.user)
             setSession(authData.session)
             setLoading(false)
-            console.log('Admin login successful')
             return { error: null, userType: 'admin' }
           }
         } catch (error) {
-          console.error('Admin login error:', error)
           setLoading(false)
           return { error: new Error('Admin login failed') }
         }
@@ -225,7 +206,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Handle student login
       if (profileData.role === 'student') {
-        console.log('Attempting student login...')
         // Simple password verification (in production, use proper password hashing)
         if (!profileData.password_hash) {
           setLoading(false)
@@ -238,12 +218,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .map(b => b.toString(16).padStart(2, '0'))
           .join('')
 
-        console.log('Password hash comparison:', { 
-          provided: hashedPasswordHex, 
-          stored: profileData.password_hash,
-          match: hashedPasswordHex === profileData.password_hash
-        })
-
         if (hashedPasswordHex !== profileData.password_hash) {
           setLoading(false)
           return { error: new Error('Invalid student credentials') }
@@ -254,14 +228,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser({ id: profileData.id, email: profileData.email } as User)
         setSession(null) // No Supabase session for students
         setLoading(false)
-        console.log('Student login successful')
         return { error: null, userType: 'student' }
       }
 
       setLoading(false)
       return { error: new Error('Invalid user role: ' + profileData.role) }
     } catch (error) {
-      console.error('Login error:', error)
       setLoading(false)
       return { error: new Error('Login failed: ' + (error as Error).message) }
     }
@@ -275,7 +247,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(null)
       setLoading(false)
     } catch (error) {
-      console.error('Error signing out:', error)
       // Still clear the state even if signOut fails
       setUser(null)
       setProfile(null)

@@ -34,7 +34,7 @@ import {
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { AdminLayout } from '@/components/admin-layout'
-import { runSeatAllocation, generateExamLayout, type Student, type ExamHall, type CollisionGroup, type AllocationResult } from '@/lib/seat-allocation'
+import { runSeatAllocation, generateExamLayout, type Student, type ExamHall as SeatAllocatorExamHall, type CollisionGroup as SeatAllocatorCollisionGroup, type AllocationResult } from '@/lib/seat-allocation'
 import { ExamLayoutVisualizer } from '@/components/exam-layout-visualizer'
 
 interface ExamFormData {
@@ -48,7 +48,7 @@ interface ExamFormData {
   selected_halls: string[] // Changed to multi-select
   max_students: string
   instructions: string
-  collision_group_id: string
+  collision_group_ids: string[]
   selected_departments: string[]
 }
 
@@ -96,7 +96,7 @@ export default function CreateExamPage() {
     selected_halls: [], // Changed to array
     max_students: '',
     instructions: '',
-    collision_group_id: '',
+    collision_group_ids: [],
     selected_departments: []
   })
   const [isAllocating, setIsAllocating] = useState(false)
@@ -104,6 +104,10 @@ export default function CreateExamPage() {
   const [allocationResult, setAllocationResult] = useState<AllocationResult | null>(null)
   const [showLayoutVisualizer, setShowLayoutVisualizer] = useState(false)
   const [students, setStudents] = useState<Student[]>([])
+  const [scheduleAt, setScheduleAt] = useState<string>('')
+  const [showScheduleOption, setShowScheduleOption] = useState(false)
+  const [showSchedulePopup, setShowSchedulePopup] = useState(false)
+  const [isScheduled, setIsScheduled] = useState(false)
 
   useEffect(() => {
     if (!loading && (!user || profile?.role !== 'admin')) {
@@ -130,14 +134,14 @@ export default function CreateExamPage() {
 
       if (error) throw error
 
-      const departmentsWithCount = data?.map(dept => ({
+      const departmentsWithCount = data?.map((dept: any) => ({
         ...dept,
         student_count: dept.student_count?.[0]?.count || 0
       })) || []
 
       setDepartments(departmentsWithCount)
     } catch (error) {
-      console.error('Error fetching departments:', error)
+      // Handle error silently
     }
   }
 
@@ -151,7 +155,7 @@ export default function CreateExamPage() {
       if (error) throw error
       setExamHalls(data || [])
     } catch (error) {
-      console.error('Error fetching exam halls:', error)
+      // Handle error silently
     }
   }
 
@@ -168,14 +172,14 @@ export default function CreateExamPage() {
 
       if (error) throw error
 
-      const groupsWithDepartments = data?.map(group => ({
+      const groupsWithDepartments = data?.map((group: any) => ({
         ...group,
         departments: group.departments?.map((cgd: any) => cgd.department) || []
       })) || []
 
       setCollisionGroups(groupsWithDepartments)
     } catch (error) {
-      console.error('Error fetching collision groups:', error)
+      // Handle error silently
     }
   }
 
@@ -194,7 +198,7 @@ export default function CreateExamPage() {
 
       if (error) throw error
 
-      const studentsWithDepartment = data?.map(student => ({
+      const studentsWithDepartment = data?.map((student: any) => ({
         id: student.id,
         full_name: student.full_name,
         roll_number: student.roll_number || '',
@@ -207,7 +211,7 @@ export default function CreateExamPage() {
       setStudents(studentsWithDepartment)
       return studentsWithDepartment
     } catch (error) {
-      console.error('Error fetching students:', error)
+      // Handle error silently
       return []
     }
   }
@@ -233,6 +237,7 @@ export default function CreateExamPage() {
   const progress = (currentStep / steps.length) * 100
 
   const handleInputChange = (field: keyof ExamFormData, value: string | string[]) => {
+    // Update form field
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
@@ -261,13 +266,7 @@ export default function CreateExamPage() {
     }, 0)
   }
 
-  const getSelectedHall = () => {
-    return examHalls.find(hall => hall.id === formData.hall_id)
-  }
-
-  const getSelectedCollisionGroup = () => {
-    return collisionGroups.find(group => group.id === formData.collision_group_id)
-  }
+  const getSelectedCollisionGroups = () => collisionGroups.filter(g => formData.collision_group_ids.includes(g.id))
 
   const canProceedToNext = () => {
     switch (currentStep) {
@@ -297,6 +296,8 @@ export default function CreateExamPage() {
   }
 
   const handleRunAllocation = async () => {
+    // Starting allocation process
+    
     setIsAllocating(true)
     
     try {
@@ -310,7 +311,7 @@ export default function CreateExamPage() {
       }
 
       // Convert exam halls to the format expected by the allocator
-      const hallsForAllocation: ExamHall[] = formData.selected_halls.map(hallId => {
+      const hallsForAllocation: SeatAllocatorExamHall[] = formData.selected_halls.map(hallId => {
         const hall = examHalls.find(h => h.id === hallId)
         return {
           id: hall!.id,
@@ -325,12 +326,14 @@ export default function CreateExamPage() {
         }
       })
 
-      // Convert collision groups to the format expected by the allocator
-      const collisionGroupsForAllocation: CollisionGroup[] = collisionGroups.map(group => ({
-        id: group.id,
-        name: group.name,
-        departments: group.departments.map((dept: any) => dept.id)
-      }))
+      // Convert only selected collision groups to the format expected by the allocator
+      const collisionGroupsForAllocation: SeatAllocatorCollisionGroup[] = collisionGroups
+        .filter(group => formData.collision_group_ids.includes(group.id))
+        .map(group => ({
+          id: group.id,
+          name: group.name,
+          departments: group.departments.map((dept: any) => dept.id)
+        }))
 
       // Run seat allocation
       const result = await runSeatAllocation(students, hallsForAllocation, collisionGroupsForAllocation)
@@ -338,23 +341,164 @@ export default function CreateExamPage() {
       setAllocationResult(result)
       setAllocationComplete(true)
     } catch (error) {
-      console.error('Error running seat allocation:', error)
+      // Handle error silently
       alert('Error running seat allocation. Please try again.')
     } finally {
       setIsAllocating(false)
     }
   }
 
-  const handleSaveAsDraft = () => {
-    // Save exam as draft
-    console.log('Saving as draft:', formData)
-    router.push('/admin/exams')
+  const handleSaveAsDraft = async () => {
+    try {
+      
+      // Check if user is authenticated and is admin
+      if (!user) {
+        alert('You must be logged in to save an exam')
+        return
+      }
+      
+      if (profile?.role !== 'admin') {
+        alert('Only admin users can save exams. Your role: ' + (profile?.role || 'unknown'))
+        return
+      }
+      
+      const { data: exam, error } = await supabase.from('exams').insert({
+        title: formData.title,
+        subject: formData.subject,
+        description: formData.description,
+        exam_date: formData.exam_date,
+        start_time: formData.start_time,
+        end_time: formData.end_time,
+        duration_minutes: Number(formData.duration_minutes),
+        status: 'draft',
+        max_students: formData.max_students ? Number(formData.max_students) : null,
+        instructions: formData.instructions,
+        created_by: user?.id
+      }).select().single()
+      
+      // Exam inserted successfully
+      if (error) throw error
+
+      // link departments
+      if (formData.selected_departments.length) {
+        const { error: deptError } = await supabase.from('exam_departments').insert(
+          formData.selected_departments.map((deptId) => ({ exam_id: exam.id, department_id: deptId }))
+        )
+        if (deptError) throw deptError
+      }
+
+      // Save seat allocations to database
+      if (allocationResult) {
+        const allocationData = []
+        for (const hall of allocationResult.halls) {
+          for (const seat of hall.seats) {
+            if (seat.student_id) {
+              allocationData.push({
+                exam_id: exam.id,
+                hall_id: hall.hall_id,
+                student_id: seat.student_id,
+                seat_row: seat.row_number,
+                seat_column: seat.column_number,
+                seat_number: seat.seat_number
+              })
+            }
+          }
+        }
+        if (allocationData.length > 0) {
+          const { error: allocError } = await supabase.from('exam_allocations').insert(allocationData)
+          if (allocError) throw allocError
+          // Seat allocations saved to database
+        }
+      }
+
+      alert('Exam saved as draft successfully!')
+      router.push('/admin/exams')
+    } catch (e: any) {
+      // Handle error silently
+      alert(`Failed to save draft: ${e.message || 'Unknown error'}`)
+    }
   }
 
-  const handlePublishExam = () => {
-    // Publish exam
-    console.log('Publishing exam:', formData)
-    router.push('/admin/exams')
+  const handlePublishExam = async () => {
+    try {
+      
+      // Check if user is authenticated and is admin
+      if (!user) {
+        alert('You must be logged in to publish an exam')
+        return
+      }
+      
+      if (profile?.role !== 'admin') {
+        alert('Only admin users can publish exams. Your role: ' + (profile?.role || 'unknown'))
+        return
+      }
+      
+      // Validate form data before sending
+      if (!formData.title || !formData.subject || !formData.exam_date || !formData.start_time || !formData.end_time) {
+        alert('Please fill in all required fields')
+        return
+      }
+      
+      // Check if exam_date is corrupted
+      if (formData.exam_date.includes('duration_minutes')) {
+        alert('Please re-enter the exam date - it appears to be corrupted')
+        return
+      }
+      
+      const { data: exam, error } = await supabase.from('exams').insert({
+        title: formData.title,
+        subject: formData.subject,
+        description: formData.description,
+        exam_date: formData.exam_date,
+        start_time: formData.start_time,
+        end_time: formData.end_time,
+        duration_minutes: Number(formData.duration_minutes),
+        status: 'published',
+        max_students: formData.max_students ? Number(formData.max_students) : null,
+        instructions: formData.instructions,
+        created_by: user?.id
+      }).select().single()
+      
+      // Exam inserted successfully
+      if (error) throw error
+
+      if (formData.selected_departments.length) {
+        const { error: deptError } = await supabase.from('exam_departments').insert(
+          formData.selected_departments.map((deptId) => ({ exam_id: exam.id, department_id: deptId }))
+        )
+        if (deptError) throw deptError
+      }
+
+      // Save seat allocations to database
+      if (allocationResult) {
+        const allocationData = []
+        for (const hall of allocationResult.halls) {
+          for (const seat of hall.seats) {
+            if (seat.student_id) {
+              allocationData.push({
+                exam_id: exam.id,
+                hall_id: hall.hall_id,
+                student_id: seat.student_id,
+                seat_row: seat.row_number,
+                seat_column: seat.column_number,
+                seat_number: seat.seat_number
+              })
+            }
+          }
+        }
+        if (allocationData.length > 0) {
+          const { error: allocError } = await supabase.from('exam_allocations').insert(allocationData)
+          if (allocError) throw allocError
+          // Seat allocations saved to database
+        }
+      }
+
+      alert('Exam published successfully!')
+      router.push('/admin/exams')
+    } catch (e: any) {
+      // Handle error silently
+      alert(`Failed to publish exam: ${e.message || 'Unknown error'}`)
+    }
   }
 
   const renderStepContent = () => {
@@ -487,20 +631,34 @@ export default function CreateExamPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="collision_group_id">Collision Group (Optional)</Label>
-              <Select value={formData.collision_group_id} onValueChange={(value) => handleInputChange('collision_group_id', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select collision group" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No collision group</SelectItem>
-                  {collisionGroups.map((group) => (
-                    <SelectItem key={group.id} value={group.id}>
-                      {group.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Collision Groups (Optional)</Label>
+              <div className="text-sm text-gray-600 mb-2">Select one or more collision groups</div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {collisionGroups.map((group) => (
+                  <div key={group.id} className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50">
+                    <Checkbox
+                      id={`cg-${group.id}`}
+                      checked={formData.collision_group_ids.includes(group.id)}
+                      onCheckedChange={() => {
+                        setFormData(prev => ({
+                          ...prev,
+                          collision_group_ids: prev.collision_group_ids.includes(group.id)
+                            ? prev.collision_group_ids.filter(id => id !== group.id)
+                            : [...prev.collision_group_ids, group.id]
+                        }))
+                      }}
+                    />
+                    <div className="flex-1">
+                      <Label htmlFor={`cg-${group.id}`} className="cursor-pointer">
+                        <div className="font-medium">{group.name}</div>
+                        {group.description && (
+                          <div className="text-xs text-gray-600">{group.description}</div>
+                        )}
+                      </Label>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -521,14 +679,14 @@ export default function CreateExamPage() {
           <div className="space-y-6">
             <div className="text-center">
               <h3 className="text-lg font-semibold mb-2">Select Departments</h3>
-              <p className="text-gray-600 dark:text-gray-300">
+              <p className="text-gray-700 dark:text-gray-200">
                 Choose which departments will participate in this exam
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {departments.map((dept) => (
-                <div key={dept.id} className="flex items-center space-x-3 p-4 border rounded-lg">
+                <div key={dept.id} className="flex items-center space-x-3 p-4 border rounded-lg hover:bg-gray-50 transition">
                   <Checkbox
                     id={`dept-${dept.id}`}
                     checked={formData.selected_departments.includes(dept.id)}
@@ -537,7 +695,7 @@ export default function CreateExamPage() {
                   <div className="flex-1">
                     <Label htmlFor={`dept-${dept.id}`} className="cursor-pointer">
                       <div className="font-medium">{dept.name} ({dept.code})</div>
-                      <div className="text-sm text-gray-600 dark:text-gray-300">
+                      <div className="text-sm text-gray-700 dark:text-gray-200">
                         {dept.student_count} students
                       </div>
                     </Label>
@@ -619,24 +777,28 @@ export default function CreateExamPage() {
               </Card>
             </div>
 
-            {getSelectedCollisionGroup() && (
+            {getSelectedCollisionGroups().length > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg">Collision Group</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    <div className="font-medium">{getSelectedCollisionGroup()?.name}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">
-                      {getSelectedCollisionGroup()?.description}
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {getSelectedCollisionGroup()?.departments.map(dept => (
-                        <Badge key={dept.id} variant="outline">
-                          {dept.name} ({dept.code})
-                        </Badge>
-                      ))}
-                    </div>
+                    {getSelectedCollisionGroups().map(group => (
+                      <div key={group.id} className="mb-2">
+                        <div className="font-medium">{group.name}</div>
+                        {group.description && (
+                          <div className="text-sm text-gray-600 dark:text-gray-300">{group.description}</div>
+                        )}
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {group.departments.map(dept => (
+                            <Badge key={dept.id} variant="outline">
+                              {dept.name} ({dept.code})
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
@@ -714,9 +876,9 @@ export default function CreateExamPage() {
                   {allocationResult && (
                     <div className="space-y-4">
                       <h4 className="font-semibold text-lg">Hall Allocation Details</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {allocationResult.halls.map((hall) => (
-                          <Card key={hall.hall_id}>
+                          <Card key={hall.hall_id} className="cursor-pointer" onClick={() => setShowLayoutVisualizer(true)}>
                             <CardHeader>
                               <CardTitle className="text-base">{hall.hall_name}</CardTitle>
                             </CardHeader>
@@ -745,7 +907,7 @@ export default function CreateExamPage() {
                   )}
 
                   {/* Action Buttons */}
-                  <div className="flex gap-2 justify-center">
+                  <div className="flex flex-col md:flex-row gap-3 justify-center">
                     <Button 
                       variant="outline" 
                       onClick={() => setShowLayoutVisualizer(true)}
@@ -754,14 +916,98 @@ export default function CreateExamPage() {
                       <Eye className="h-4 w-4 mr-2" />
                       View Layout
                     </Button>
+                    
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setShowSchedulePopup(true)}
+                    >
+                      <Clock className="h-4 w-4 mr-2" />
+                      Schedule Exam
+                    </Button>
+                    
                     <Button variant="outline" onClick={handleSaveAsDraft}>
                       <Save className="h-4 w-4 mr-2" />
                       Save as Draft
                     </Button>
-                    <Button onClick={handlePublishExam}>
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      Publish Exam
-                    </Button>
+                    
+                    {!isScheduled ? (
+                      <Button onClick={handlePublishExam}>
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Publish Exam
+                      </Button>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Button onClick={async () => {
+                          if (!scheduleAt) {
+                            alert('Please select a schedule date and time')
+                            return
+                          }
+                          try {
+                            const { data: exam, error } = await supabase.from('exams').insert({
+                              title: formData.title,
+                              subject: formData.subject,
+                              description: formData.description,
+                              exam_date: formData.exam_date,
+                              start_time: formData.start_time,
+                              end_time: formData.end_time,
+                              duration_minutes: Number(formData.duration_minutes),
+                              status: 'scheduled',
+                              scheduled_at: scheduleAt,
+                              max_students: formData.max_students ? Number(formData.max_students) : null,
+                              instructions: formData.instructions,
+                              created_by: user?.id
+                            }).select().single()
+                            if (error) throw error
+                            
+                            if (formData.selected_departments.length) {
+                              const { error: deptError } = await supabase.from('exam_departments').insert(
+                                formData.selected_departments.map((deptId) => ({ exam_id: exam.id, department_id: deptId }))
+                              )
+                              if (deptError) throw deptError
+                            }
+
+                            // Save seat allocations if available
+                            if (allocationResult) {
+                              const seatAllocations = []
+                              for (const hall of allocationResult.halls) {
+                                for (const seat of hall.seats) {
+                                  if (seat.student_id) {
+                                    seatAllocations.push({
+                                      exam_id: exam.id,
+                                      student_id: seat.student_id,
+                                      seat_id: seat.id,
+                                      allocated_by: user?.id
+                                    })
+                                  }
+                                }
+                              }
+                              if (seatAllocations.length > 0) {
+                                const { error: allocError } = await supabase.from('seat_allocations').insert(seatAllocations)
+                                if (allocError) throw allocError
+                              }
+                            }
+
+                            alert('Exam scheduled successfully!')
+                            router.push('/admin/exams')
+                          } catch (err: any) {
+                            // Handle error silently
+                            alert(`Failed to schedule exam: ${err.message || 'Unknown error'}`)
+                          }
+                        }}>
+                          <Clock className="h-4 w-4 mr-2" />
+                          Schedule Now
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            setIsScheduled(false)
+                            setScheduleAt('')
+                          }}
+                        >
+                          Cancel Schedule
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -779,21 +1025,7 @@ export default function CreateExamPage() {
       <div className="min-h-screen bg-white">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-5xl mx-auto">
-          {/* Header */}
-          <div className="flex items-center gap-4 mb-8">
-            <Button variant="outline" size="sm" onClick={() => router.back()}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                Create New Exam
-              </h1>
-              <p className="text-gray-600 dark:text-gray-300">
-                Set up a new exam with seat allocation
-              </p>
-            </div>
-          </div>
+          {/* Header removed as requested */}
 
           {/* Progress */}
           <Card className="mb-8">
@@ -804,9 +1036,9 @@ export default function CreateExamPage() {
                   <span>{Math.round(progress)}% Complete</span>
                 </div>
                 <Progress value={progress} className="h-2" />
-                <div className="flex justify-between">
+                <div className="grid grid-cols-3 gap-2">
                   {steps.map((step) => (
-                    <div key={step.id} className="text-center">
+                    <div key={step.id} className="flex flex-col items-center text-center">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                         step.id <= currentStep 
                           ? 'bg-primary text-primary-foreground' 
@@ -858,8 +1090,14 @@ export default function CreateExamPage() {
 
       {/* Layout Visualizer Modal */}
       {showLayoutVisualizer && allocationResult && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-7xl w-full max-h-[90vh] overflow-auto">
+        <div 
+          className="fixed inset-0 flex items-center justify-center z-50 p-4"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)', backdropFilter: 'blur(4px)' }}
+        >
+          <div 
+            className="rounded-lg max-w-7xl w-full max-h-[90vh] overflow-auto"
+            style={{ backgroundColor: '#ffffff', border: '1px solid #e5e5e5', boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)' }}
+          >
             <div className="p-6">
               <ExamLayoutVisualizer 
                 layouts={generateExamLayout(allocationResult, formData.selected_halls.map(hallId => {
@@ -878,6 +1116,61 @@ export default function CreateExamPage() {
                 }))}
                 onClose={() => setShowLayoutVisualizer(false)}
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Schedule Popup Modal */}
+      {showSchedulePopup && (
+        <div 
+          className="fixed inset-0 flex items-center justify-center z-50 p-4"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)', backdropFilter: 'blur(4px)' }}
+        >
+          <div 
+            className="rounded-lg max-w-md w-full p-6"
+            style={{ backgroundColor: '#ffffff', border: '1px solid #e5e5e5', boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)' }}
+          >
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold">Schedule Exam</h3>
+                <p className="text-sm text-gray-600">Select when to automatically publish this exam</p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="scheduleAt">Schedule Date & Time</Label>
+                <Input 
+                  id="scheduleAt" 
+                  type="datetime-local" 
+                  value={scheduleAt} 
+                  onChange={(e) => setScheduleAt(e.target.value)} 
+                  className="w-full" 
+                />
+              </div>
+              
+              <div className="flex gap-2 justify-end">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowSchedulePopup(false)
+                    setScheduleAt('')
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={() => {
+                    if (!scheduleAt) {
+                      alert('Please select a schedule date and time')
+                      return
+                    }
+                    setIsScheduled(true)
+                    setShowSchedulePopup(false)
+                  }}
+                >
+                  Confirm Schedule
+                </Button>
+              </div>
             </div>
           </div>
         </div>
