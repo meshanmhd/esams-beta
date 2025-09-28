@@ -82,7 +82,7 @@ export default function StudentExamsPage() {
       if (regError) throw regError
 
       // Transform the data to match our interface
-      const studentExams: StudentExam[] = registrations?.map(reg => {
+      const studentExams: StudentExam[] = registrations?.map((reg: any) => {
         const exam = reg.exam
         const hall = exam.hall
         const seatAllocation = reg.exam.seat_allocation?.[0]

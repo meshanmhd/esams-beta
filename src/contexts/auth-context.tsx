@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: any) => {
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
       setSession(session)
       setUser(session?.user ?? null)
       
@@ -196,7 +196,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(authData.user)
             setSession(authData.session)
             setLoading(false)
-            return { error: null, userType: 'admin' }
+            return { error: null, userType: 'admin' as const }
           }
         } catch (error) {
           setLoading(false)
@@ -228,7 +228,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser({ id: profileData.id, email: profileData.email } as User)
         setSession(null) // No Supabase session for students
         setLoading(false)
-        return { error: null, userType: 'student' }
+        return { error: null, userType: 'student' as const }
       }
 
       setLoading(false)

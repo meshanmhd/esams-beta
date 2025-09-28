@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { AdminLayout } from '@/components/admin-layout'
 import { supabase } from '@/lib/supabase'
+import { DataService } from '@/lib/data-service'
 
 interface Exam {
   id: string
@@ -34,6 +35,7 @@ export default function AdminExamsPage() {
   const { user, profile, loading } = useAuth()
   const router = useRouter()
   const [exams, setExams] = useState<Exam[]>([])
+  const [loadingData, setLoadingData] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [allocationFilter, setAllocationFilter] = useState<string>('all')
@@ -45,47 +47,32 @@ export default function AdminExamsPage() {
   }, [user, profile, loading, router])
 
   useEffect(() => {
-    fetchExams()
-  }, [])
+    if (user && profile?.role === 'admin') {
+      fetchExams()
+    }
+  }, [user, profile])
 
   const fetchExams = async () => {
     try {
-      const { data: examsData, error: examsError } = await supabase
-        .from('exams')
-        .select(`
-          *,
-          departments:exam_departments(
-            department:departments(name)
-          )
-        `)
-        .order('exam_date', { ascending: true })
-
-      if (examsError) throw examsError
-
-      const examsWithDetails = examsData?.map(exam => ({
-        id: exam.id,
-        title: exam.title,
-        subject: exam.subject,
-        exam_date: exam.exam_date,
-        start_time: exam.start_time,
-        end_time: exam.end_time,
-        status: exam.status,
-        registrations: exam.registered_students || 0,
-        allocations: exam.allocated_students || 0,
-        departments: exam.departments?.map((d: any) => d.department.name) || [],
-        collision_group: exam.collision_group
-      })) || []
-
-      setExams(examsWithDetails)
+      setLoadingData(true)
+      
+      // Use optimized data service
+      const examsData = await DataService.fetchAdminExams()
+      setExams(examsData)
     } catch (error) {
       // Handle error silently
+    } finally {
+      setLoadingData(false)
     }
   }
 
-  if (loading) {
+  if (loading || loadingData) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading exams...</p>
+        </div>
       </div>
     )
   }

@@ -33,6 +33,7 @@ import {
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { DataService } from '@/lib/data-service'
 import { AdminLayout } from '@/components/admin-layout'
 import { runSeatAllocation, generateExamLayout, type Student, type ExamHall as SeatAllocatorExamHall, type CollisionGroup as SeatAllocatorCollisionGroup, type AllocationResult } from '@/lib/seat-allocation'
 import { ExamLayoutVisualizer } from '@/components/exam-layout-visualizer'
@@ -117,10 +118,21 @@ export default function CreateExamPage() {
 
   // Fetch real data from database
   useEffect(() => {
-    fetchDepartments()
-    fetchExamHalls()
-    fetchCollisionGroups()
+    fetchInitialData()
   }, [])
+
+  const fetchInitialData = async () => {
+    try {
+      // Use optimized data service to fetch all data in parallel
+      const { departments, halls, collisionGroups } = await DataService.fetchExamCreationData()
+      
+      setDepartments(departments)
+      setExamHalls(halls)
+      setCollisionGroups(collisionGroups)
+    } catch (error) {
+      // Handle error silently
+    }
+  }
 
   const fetchDepartments = async () => {
     try {

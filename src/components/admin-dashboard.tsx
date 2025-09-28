@@ -86,9 +86,9 @@ export function AdminDashboard() {
 
       // Calculate stats
       const totalExams = exams?.length || 0
-      const publishedExams = exams?.filter(e => e.status === 'published').length || 0
-      const scheduledExams = exams?.filter(e => e.status === 'scheduled').length || 0
-      const upcomingExams = exams?.filter(e => {
+      const publishedExams = exams?.filter((e: any) => e.status === 'published').length || 0
+      const scheduledExams = exams?.filter((e: any) => e.status === 'scheduled').length || 0
+      const upcomingExams = exams?.filter((e: any) => {
         const examDate = new Date(e.exam_date)
         const today = new Date()
         const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
@@ -106,7 +106,7 @@ export function AdminDashboard() {
       })
 
       // Set recent exams
-      const recent = exams?.slice(0, 3).map(exam => ({
+      const recent = exams?.slice(0, 3).map((exam: any) => ({
         id: exam.id,
         title: exam.title,
         date: exam.exam_date,

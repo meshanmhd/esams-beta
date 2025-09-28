@@ -68,12 +68,14 @@ interface ExamHall {
   rows: number
   columns: number
   layout_type: string
+  seating_type?: 'single' | 'double'
 }
 
 interface CollisionGroup {
   id: string
   name: string
   description: string
+  departments?: string[]
 }
 
 export default function EditExamPage() {
@@ -173,7 +175,7 @@ export default function EditExamPage() {
       
       setFormData(prev => ({
         ...prev,
-        selected_departments: deptData?.map(d => d.department_id) || []
+        selected_departments: deptData?.map((d: any) => d.department_id) || []
       }))
 
       // Fetch all departments
@@ -187,7 +189,7 @@ export default function EditExamPage() {
 
       if (allDeptsError) throw allDeptsError
       
-      setDepartments(allDepts?.map(dept => ({
+      setDepartments(allDepts?.map((dept: any) => ({
         id: dept.id,
         name: dept.name,
         student_count: dept.profiles?.[0]?.count || 0
@@ -213,7 +215,7 @@ export default function EditExamPage() {
 
       // Fetch students from selected departments
       if (deptData && deptData.length > 0) {
-        const departmentIds = deptData.map(d => d.department_id)
+        const departmentIds = deptData.map((d: any) => d.department_id)
         const { data: studentsData, error: studentsError } = await supabase
           .from('profiles')
           .select(`
@@ -227,7 +229,7 @@ export default function EditExamPage() {
 
         if (studentsError) throw studentsError
         
-        const studentsList = studentsData?.map(student => ({
+        const studentsList = studentsData?.map((student: any) => ({
           id: student.id,
           name: student.full_name,
           roll_number: student.roll_number,
@@ -306,7 +308,8 @@ export default function EditExamPage() {
           capacity: hall.capacity,
           rows: hall.rows,
           columns: hall.columns,
-          layout_type: hall.layout_type
+          layout_type: hall.layout_type,
+          seating_type: (hall.seating_type as 'single' | 'double') || 'single'
         }))
 
       const collisionGroupsForAllocation = collisionGroups
@@ -314,7 +317,7 @@ export default function EditExamPage() {
         .map(group => ({
           id: group.id,
           name: group.name,
-          description: group.description
+          departments: group.departments || []
         }))
 
       console.log('Halls for allocation:', hallsForAllocation)
@@ -770,7 +773,7 @@ export default function EditExamPage() {
                   <Alert>
                     <CheckCircle className="h-4 w-4" />
                     <AlertDescription>
-                      Seat allocation completed successfully! {allocationResult.totalAllocated} students have been allocated seats.
+                      Seat allocation completed successfully! {allocationResult.allocation_summary.allocated_students} students have been allocated seats.
                     </AlertDescription>
                   </Alert>
                 )}
@@ -803,7 +806,7 @@ export default function EditExamPage() {
                       <div><strong>Halls:</strong> {formData.selected_halls.length}</div>
                       <div><strong>Departments:</strong> {formData.selected_departments.length}</div>
                       {allocationComplete && (
-                        <div><strong>Allocated:</strong> {allocationResult?.totalAllocated || 0}</div>
+                        <div><strong>Allocated:</strong> {allocationResult?.allocation_summary.allocated_students || 0}</div>
                       )}
                     </div>
                   </div>
@@ -873,8 +876,11 @@ export default function EditExamPage() {
               style={{ backgroundColor: '#ffffff', border: '1px solid #e5e5e5', boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)' }}
             >
               <div className="p-6">
-                <ExamLayoutVisualizer 
-                  layouts={generateExamLayout(allocationResult)}
+                <ExamLayoutVisualizer
+                  layouts={generateExamLayout(allocationResult, examHalls.map(hall => ({
+                    ...hall,
+                    seating_type: hall.seating_type || 'single'
+                  })))}        
                   onClose={() => setShowLayout(false)}
                 />
               </div>

@@ -81,7 +81,7 @@ export default function HallLayoutPage() {
 
       if (seatsError) throw seatsError
 
-      const seats = seatsData?.map(seat => ({
+      const seats = seatsData?.map((seat: any) => ({
         id: seat.id,
         number: seat.seat_number,
         row: seat.row_number,

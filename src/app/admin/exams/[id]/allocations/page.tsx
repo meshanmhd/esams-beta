@@ -59,7 +59,7 @@ interface Exam {
   allocated_students: number
 }
 
-export default function SeatAllocationPage({ params }: { params: { id: string } }) {
+export default function SeatAllocationPage({ params }: { params: Promise<{ id: string }> }) {
   const { user, profile, loading } = useAuth()
   const router = useRouter()
   const [exam, setExam] = useState<Exam | null>(null)
@@ -75,8 +75,10 @@ export default function SeatAllocationPage({ params }: { params: { id: string } 
 
   // Mock data - replace with actual data fetching
   useEffect(() => {
-    const mockExam: Exam = {
-      id: params.id,
+    const loadData = async () => {
+      const resolvedParams = await params
+      const mockExam: Exam = {
+        id: resolvedParams.id,
       title: 'Mathematics Final Exam',
       subject: 'Mathematics',
       exam_date: '2024-01-15',
@@ -120,7 +122,9 @@ export default function SeatAllocationPage({ params }: { params: { id: string } 
       }
     }
     setSeats(mockSeats)
-  }, [params.id])
+    }
+    loadData()
+  }, [params])
 
   if (loading) {
     return (

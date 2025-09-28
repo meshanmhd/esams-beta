@@ -63,7 +63,7 @@ export default function CollisionGroupsPage() {
 
       if (groupsError) throw groupsError
 
-      const groupsWithDepartments = groupsData?.map(group => ({
+      const groupsWithDepartments = groupsData?.map((group: any) => ({
         ...group,
         departments: group.departments?.map((d: any) => d.department.id) || [],
         department_names: group.departments?.map((d: any) => d.department.name) || []

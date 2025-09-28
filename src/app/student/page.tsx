@@ -2,13 +2,15 @@
 
 import { useAuth } from '@/contexts/auth-context'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, memo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { supabase } from '@/lib/supabase'
-import { GraduationCap, Calendar, Clock, MapPin, Building, Users, Eye } from 'lucide-react'
+import { DataService } from '@/lib/data-service'
+import { PerformanceMonitor } from '@/components/performance-monitor'
+import { GraduationCap, Calendar, Clock, MapPin, Building, Users, Eye, BookOpen } from 'lucide-react'
 
 interface Exam {
   id: string
@@ -72,49 +74,11 @@ export default function StudentDashboard() {
     try {
       setLoadingData(true)
       
-      // Fetch exam allocations for this student
-      const { data: allocations, error: allocationError } = await supabase
-        .from('exam_allocations')
-        .select(`
-          *,
-          exam:exams(*),
-          hall:exam_halls(*)
-        `)
-        .eq('student_id', user?.id)
-        .in('exam.status', ['published', 'scheduled'])
-
-      if (allocationError) {
-        return
-      }
-
-      setExamAllocations(allocations || [])
-
-      // Fetch upcoming exams (published and scheduled) that this student's department is part of
-      const { data: departmentData, error: deptError } = await supabase
-        .from('profiles')
-        .select('classroom:classrooms(department_id)')
-        .eq('id', user?.id)
-        .single()
-
-      if (deptError || !departmentData?.classroom?.department_id) {
-        return
-      }
-
-      const { data: exams, error: examError } = await supabase
-        .from('exams')
-        .select(`
-          *,
-          exam_departments!inner(department_id)
-        `)
-        .eq('exam_departments.department_id', departmentData.classroom.department_id)
-        .in('status', ['published', 'scheduled'])
-        .gte('exam_date', new Date().toISOString().split('T')[0])
-
-      if (examError) {
-        return
-      }
-
-      setUpcomingExams(exams || [])
+      // Use optimized data service
+      const { allocations, upcomingExams } = await DataService.fetchStudentData(user?.id || '')
+      
+      setExamAllocations(allocations)
+      setUpcomingExams(upcomingExams)
     } catch (error) {
       // Handle error silently
     } finally {
@@ -152,10 +116,88 @@ export default function StudentDashboard() {
     }
   }
 
-  if (loading || loadingData) {
+  // Skeleton loading component
+  const SkeletonCard = () => (
+    <Card className="rounded-lg shadow-sm border border-gray-200">
+      <CardContent className="p-4">
+        <div className="animate-pulse">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-gray-200 rounded-lg"></div>
+              <div className="ml-3">
+                <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-16"></div>
+              </div>
+            </div>
+            <div className="h-6 bg-gray-200 rounded w-16"></div>
+          </div>
+          <div className="space-y-2">
+            <div className="h-3 bg-gray-200 rounded w-full"></div>
+            <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-black"></div>
+      </div>
+    )
+  }
+
+  if (loadingData) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        {/* Mobile Header Skeleton */}
+        <div className="bg-white shadow-sm border-b border-gray-200">
+          <div className="px-4 py-4">
+            <div className="animate-pulse">
+              <div className="h-6 bg-gray-200 rounded w-48 mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-32"></div>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-4 py-6 max-w-7xl mx-auto">
+          {/* Stats Skeleton */}
+          <div className="mb-6">
+            <Card className="rounded-lg shadow-sm border border-gray-200">
+              <CardContent className="p-4">
+                <div className="animate-pulse">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 bg-gray-200 rounded-lg"></div>
+                      <div className="ml-3">
+                        <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+                        <div className="h-6 bg-gray-200 rounded w-8"></div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="h-3 bg-gray-200 rounded w-12 mb-1"></div>
+                      <div className="h-5 bg-gray-200 rounded w-8"></div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Exams Skeleton */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div className="h-6 bg-gray-200 rounded w-32"></div>
+              <div className="h-5 bg-gray-200 rounded w-16"></div>
+            </div>
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <SkeletonCard key={i} />
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
@@ -166,6 +208,7 @@ export default function StudentDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <PerformanceMonitor name="Student Dashboard" />
       {/* Mobile Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="px-4 py-4">

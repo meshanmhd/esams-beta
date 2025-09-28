@@ -66,7 +66,7 @@ export function useStudents() {
 
       // Fetch departments and classrooms separately
       const studentsWithDepartment = await Promise.all(
-        studentsData?.map(async (student) => {
+        studentsData?.map(async (student: any) => {
           let departmentName = 'No Department'
           let classroomName = 'No Classroom'
 
@@ -133,7 +133,7 @@ export function useExams() {
 
       if (examsError) throw examsError
 
-      const examsWithDetails = examsData?.map(exam => ({
+      const examsWithDetails = examsData?.map((exam: any) => ({
         id: exam.id,
         title: exam.title,
         subject: exam.subject,

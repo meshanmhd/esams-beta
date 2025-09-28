@@ -1,15 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
-import Link from 'next/link'
-import { AdminDashboard } from '@/components/admin-dashboard'
-import { AdminLayout } from '@/components/admin-layout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -27,8 +22,8 @@ export default function Home() {
   useEffect(() => {
     if (user && profile) {
       if (profile.role === 'admin') {
-        // Admin is already on the right page (home shows admin dashboard)
-        return
+        // Redirect admin to admin dashboard
+        router.push('/admin')
       } else if (profile.role === 'student') {
         // Redirect student to student dashboard
         router.push('/student')
@@ -38,8 +33,11 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-black"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
       </div>
     )
   }
@@ -63,34 +61,42 @@ export default function Home() {
     }
 
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
-          <div className="text-center">
-            <div className="mx-auto h-20 w-20 bg-black rounded-lg flex items-center justify-center mb-6">
-              <GraduationCap className="h-10 w-10 text-white" />
+      <div className="min-h-screen bg-gray-50">
+        {/* Mobile Header */}
+        <div className="bg-white shadow-sm border-b border-gray-200">
+          <div className="px-4 py-6">
+            <div className="text-center">
+              <div className="mx-auto h-16 w-16 bg-black rounded-lg flex items-center justify-center mb-4">
+                <GraduationCap className="h-8 w-8 text-white" />
+              </div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                ESAMS
+              </h1>
+              <p className="text-sm text-gray-600">
+                Exam Seat Allocation Management System
+              </p>
             </div>
-            <h1 className="text-4xl font-bold text-black mb-4">
-              ESAMS
-            </h1>
-            <p className="text-xl text-gray-600">
-              Exam Seat Allocation Management System
-            </p>
-            <p className="text-sm text-gray-500 mt-2">
-              Enter your credentials to access your dashboard
-            </p>
           </div>
+        </div>
 
-          <Card className="border border-gray-200 shadow-sm">
-            <CardContent className="pt-8">
-              <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="px-4 py-8 max-w-md mx-auto">
+          <Card className="rounded-lg shadow-sm border border-gray-200">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg text-center">Sign In</CardTitle>
+              <CardDescription className="text-center text-sm">
+                Enter your credentials to access your dashboard
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
                 {error && (
                   <Alert variant="destructive" className="border-red-200 bg-red-50">
-                    <AlertDescription className="text-red-800">{error}</AlertDescription>
+                    <AlertDescription className="text-red-800 text-sm">{error}</AlertDescription>
                   </Alert>
                 )}
                 
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-black font-medium">Email Address</Label>
+                  <Label htmlFor="email" className="text-sm font-medium text-gray-700">Email Address</Label>
                   <Input
                     id="email"
                     type="email"
@@ -98,12 +104,12 @@ export default function Home() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     placeholder="Enter your email"
-                    className="border-gray-300 focus:border-black focus:ring-black"
+                    className="border-gray-300 focus:border-black focus:ring-black text-sm"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-black font-medium">Password</Label>
+                  <Label htmlFor="password" className="text-sm font-medium text-gray-700">Password</Label>
                   <Input
                     id="password"
                     type="password"
@@ -111,13 +117,13 @@ export default function Home() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     placeholder="Enter your password"
-                    className="border-gray-300 focus:border-black focus:ring-black"
+                    className="border-gray-300 focus:border-black focus:ring-black text-sm"
                   />
                 </div>
 
                 <Button 
                   type="submit" 
-                  className="w-full bg-black hover:bg-gray-800 text-white font-medium py-3" 
+                  className="w-full bg-black hover:bg-gray-800 text-white font-medium py-2.5 text-sm" 
                   disabled={loginLoading}
                 >
                   {loginLoading ? (
@@ -134,8 +140,8 @@ export default function Home() {
                 </Button>
               </form>
 
-              <div className="mt-6 text-center">
-                <p className="text-sm text-gray-600">
+              <div className="mt-4 text-center">
+                <p className="text-xs text-gray-500">
                   The system will automatically detect your role and redirect you to the appropriate dashboard.
                 </p>
               </div>
@@ -146,70 +152,14 @@ export default function Home() {
     )
   }
 
+  // This should not be reached due to the useEffect redirects above
+  // But if it is, show a loading state
   return (
-    <div className="min-h-screen bg-white">
-      {profile?.role === 'admin' ? (
-        <AdminLayout>
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-black">
-              Welcome back, {profile?.full_name || user.email}!
-            </h1>
-            <p className="text-gray-600">
-              Administrator Dashboard
-            </p>
-          </div>
-          <AdminDashboard />
-        </AdminLayout>
-      ) : (
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-black">
-                Welcome back, {profile?.full_name || user.email}!
-              </h1>
-              <p className="text-gray-600">
-                Student Portal
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <Badge variant="secondary">Student</Badge>
-              <Button variant="outline" onClick={signOut}>
-                Sign Out
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card className="rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-              <CardHeader>
-                <CardTitle>My Exams</CardTitle>
-                <CardDescription>
-                  View your registered exams and seat assignments
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Link href="/student/exams">
-                  <Button className="w-full rounded-lg">View My Exams</Button>
-                </Link>
-              </CardContent>
-            </Card>
-
-            <Card className="rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-              <CardHeader>
-                <CardTitle>Profile</CardTitle>
-                <CardDescription>
-                  Update your profile information
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Link href="/student/profile">
-                  <Button className="w-full rounded-lg">Edit Profile</Button>
-                </Link>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      )}
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-gray-900 mx-auto mb-4"></div>
+        <p className="text-gray-600">Redirecting...</p>
+      </div>
     </div>
   )
 }

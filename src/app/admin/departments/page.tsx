@@ -76,7 +76,7 @@ export default function DepartmentsPage() {
 
       // Get student count and classroom count for each department
       const departmentsWithCounts = await Promise.all(
-        departmentsData?.map(async (dept) => {
+        departmentsData?.map(async (dept: any) => {
           const { count: studentCount } = await supabase
             .from('profiles')
             .select('*', { count: 'exact', head: true })
@@ -113,7 +113,7 @@ export default function DepartmentsPage() {
 
       // Get student count for each classroom
       const classroomsWithCounts = await Promise.all(
-        classroomsData?.map(async (classroom) => {
+        classroomsData?.map(async (classroom: any) => {
           const { count } = await supabase
             .from('profiles')
             .select('*', { count: 'exact', head: true })
@@ -349,7 +349,7 @@ export default function DepartmentsPage() {
                   <div>
                     <CardTitle className="text-xl">{department.name}</CardTitle>
                     <CardDescription className="text-base">
-                      {department.code} • {department.head_of_department || 'No HOD assigned'}
+                      {department.code} • {department.description || 'No description'}
                     </CardDescription>
                   </div>
                   <div className="flex items-center gap-2">

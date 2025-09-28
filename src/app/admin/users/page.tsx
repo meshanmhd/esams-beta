@@ -76,9 +76,9 @@ export default function UsersPage() {
 
       if (usersError) throw usersError
 
-      const usersWithDepartment = usersData?.map(user => ({
+      const usersWithDepartment = usersData?.map((user: any) => ({
         ...user,
-        department_name: user.department?.name || 'No Department'
+        department_name: user.department?.name || 'No Department'        
       })) || []
 
       setUsers(usersWithDepartment)

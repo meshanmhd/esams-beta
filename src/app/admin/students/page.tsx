@@ -96,7 +96,7 @@ export default function StudentsPage() {
 
       // Then fetch departments and classrooms separately
       const studentsWithDepartment = await Promise.all(
-        studentsData?.map(async (student) => {
+        studentsData?.map(async (student: any) => {
           let departmentName = 'No Department'
           let classroomName = 'No Classroom'
 
@@ -146,7 +146,7 @@ export default function StudentsPage() {
 
       // Get student count for each classroom
       const classroomsWithCounts = await Promise.all(
-        classroomsData?.map(async (classroom) => {
+        classroomsData?.map(async (classroom: any) => {
           const { count } = await supabase
             .from('profiles')
             .select('*', { count: 'exact', head: true })

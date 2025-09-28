@@ -52,7 +52,7 @@ interface ExamDetails {
   collision_group?: string
 }
 
-export default function StudentExamDetailsPage({ params }: { params: { id: string } }) {
+export default function StudentExamDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { user, profile, loading } = useAuth()
   const router = useRouter()
   const [exam, setExam] = useState<ExamDetails | null>(null)
@@ -66,8 +66,10 @@ export default function StudentExamDetailsPage({ params }: { params: { id: strin
 
   // Mock data - replace with actual data fetching
   useEffect(() => {
-    const mockExam: ExamDetails = {
-      id: params.id,
+    const loadData = async () => {
+      const resolvedParams = await params
+      const mockExam: ExamDetails = {
+        id: resolvedParams.id,
       title: 'Mathematics Final Exam',
       subject: 'Mathematics',
       description: 'Comprehensive final examination covering all topics from the semester',
@@ -96,7 +98,9 @@ export default function StudentExamDetailsPage({ params }: { params: { id: strin
       collision_group: 'Engineering Core'
     }
     setExam(mockExam)
-  }, [params.id])
+    }
+    loadData()
+  }, [params])
 
   if (loading) {
     return (

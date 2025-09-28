@@ -59,7 +59,7 @@ export default function CredentialsPage() {
 
       if (studentsError) throw studentsError
 
-      const studentsWithDepartment = studentsData?.map(student => ({
+      const studentsWithDepartment = studentsData?.map((student: any) => ({
         ...student,
         department_name: student.department?.name || 'No Department'
       })) || []
@@ -75,7 +75,7 @@ export default function CredentialsPage() {
                          student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          student.student_id.toLowerCase().includes(searchTerm.toLowerCase())
     
-    const matchesDepartment = departmentFilter === 'all' || student.department_id === departmentFilter
+    const matchesDepartment = departmentFilter === 'all' || student.department_name === departmentFilter
     const matchesYear = yearFilter === 'all' || student.year.toString() === yearFilter
     const matchesStatus = statusFilter === 'all' || 
       (statusFilter === 'active' && student.is_active) ||
