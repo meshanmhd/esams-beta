@@ -6,12 +6,13 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "build:static": "next build && next export",
+    "build:netlify": "npm ci && npm run build",
     "start": "next start",
     "lint": "eslint",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "netlify:build": "npm run build"
+    "netlify:build": "npm run build:netlify"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -42,6 +43,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@netlify/plugin-nextjs": "^5.13.3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

@@ -1,13 +1,1 @@
-# Netlify redirects for Next.js SPA routing
-# This file should be placed in the public directory
-
-# Handle client-side routing for Next.js pages
-/admin/* /admin/index.html 200
-/student/* /student/index.html 200
-/auth/* /auth/index.html 200
-
-# API routes (if any)
-/api/* /api/index.html 200
-
-# Fallback for all other routes
 /* /index.html 200

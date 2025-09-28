@@ -1,0 +1,97 @@
+# Netlify Deployment Troubleshooting Guide
+
+## Common Build Issues and Solutions
+
+### 1. TypeScript Module Not Found
+**Error**: `Cannot find module 'typescript'`
+
+**Solution**: 
+- Ensure TypeScript is installed as a dev dependency: `npm install typescript --save-dev`
+- Verify it's in package.json under devDependencies
+
+### 2. Build Command Fails with Exit Code 1/2
+**Error**: `Command failed with exit code 1: npm run build`
+
+**Solutions**:
+- Use `npm ci` instead of `npm install` for more reliable builds
+- Ensure all dependencies are properly listed in package.json
+- Check Node.js version compatibility (use Node 18)
+
+### 3. Next.js Plugin Issues
+**Error**: Plugin-related build failures
+
+**Solutions**:
+- Install `@netlify/plugin-nextjs` as dev dependency
+- Configure plugin properly in netlify.toml
+- Use correct publish directory (`.next`)
+
+### 4. Environment Variables
+**Error**: Missing environment variables
+
+**Required Variables**:
+```
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+NEXT_PUBLIC_APP_URL=https://your-site-name.netlify.app
+NEXT_TELEMETRY_DISABLED=1
+NODE_ENV=production
+```
+
+### 5. Build Configuration
+**Current Configuration**:
+- Build Command: `npm ci && npm run build`
+- Publish Directory: `.next`
+- Node Version: 18
+- Plugin: `@netlify/plugin-nextjs`
+
+### 6. Alternative Build Commands
+If the main build fails, try these alternatives:
+
+1. **Basic Build**:
+   ```bash
+   npm run build
+   ```
+
+2. **Clean Install + Build**:
+   ```bash
+   npm ci && npm run build
+   ```
+
+3. **Force Clean Build**:
+   ```bash
+   rm -rf .next node_modules package-lock.json && npm install && npm run build
+   ```
+
+### 7. Debugging Steps
+1. Check Netlify build logs for specific error messages
+2. Verify all dependencies are installed correctly
+3. Ensure TypeScript is properly configured
+4. Check for any missing environment variables
+5. Verify Node.js version compatibility
+
+### 8. Fallback Configuration
+If the Next.js plugin causes issues, try this simplified netlify.toml:
+
+```toml
+[build]
+  command = "npm ci && npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "18"
+  NODE_ENV = "production"
+  NEXT_TELEMETRY_DISABLED = "1"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+```
+
+### 9. Contact Support
+If issues persist:
+1. Check Netlify's build logs for detailed error messages
+2. Verify all environment variables are set correctly
+3. Ensure the repository is properly connected to Netlify
+4. Try deploying from a different branch to test

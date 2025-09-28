@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Regular build for Netlify (not static export)
+  // Regular build for Netlify
   trailingSlash: true,
   images: {
     unoptimized: true, // Required for static export
@@ -21,6 +21,15 @@ const nextConfig: NextConfig = {
   compress: true,
 
   // Disable telemetry (handled via environment variable)
+  typescript: {
+    // Ignore TypeScript errors during build for Netlify compatibility
+    ignoreBuildErrors: false,
+  },
+  
+  eslint: {
+    // Ignore ESLint errors during build for Netlify compatibility
+    ignoreDuringBuilds: false,
+  },
 };
 
 export default nextConfig;
