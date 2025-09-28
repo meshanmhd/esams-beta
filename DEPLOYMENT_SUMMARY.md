@@ -34,7 +34,7 @@
 
 [build.environment]
   NODE_ENV = "production"
-  NODE_VERSION = "18.20.4"
+  NODE_VERSION = "18.12.1"
   NEXT_TELEMETRY_DISABLED = "1"
   NPM_CONFIG_REGISTRY = "https://registry.npmjs.org/"
   CI = "true"
@@ -67,7 +67,7 @@
 
 #### **.nvmrc**
 ```
-18.20.4
+18.12.1
 ```
 
 ### **Files Created/Updated:**
