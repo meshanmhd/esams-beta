@@ -6,9 +6,10 @@
 **Error**: `npm ci can only install packages when your package.json and package-lock.json are in sync`
 
 **Solution**: 
-- Delete the existing `package-lock.json` file: `rm package-lock.json`
+- Delete the existing `package-lock.json` and `node_modules`: `rm -rf package-lock.json node_modules`
 - Run `npm install` to regenerate the lock file
 - Commit the new `package-lock.json` to your repository
+- Use `npm install` instead of `npm ci` in build commands for better compatibility
 
 ### 2. TypeScript Module Not Found
 **Error**: `Cannot find module 'typescript'`
@@ -50,11 +51,19 @@ NODE_ENV=production
 
 ### 6. Build Configuration
 **Current Configuration**:
-- Build Command: `npm ci && npm run build`
+- Build Command: `npm install && npm run build`
 - Publish Directory: `.next`
 - Node Version: 18.20.4 (specified in .nvmrc)
 - Plugin: `@netlify/plugin-nextjs`
 - Environment: Production with telemetry disabled
+- Additional: Optimized npm settings for better compatibility
+
+**Optimized Settings**:
+- `NPM_CONFIG_AUDIT = "false"` - Disables npm audit
+- `NPM_CONFIG_FUND = "false"` - Disables funding messages
+- `NPM_CONFIG_UPDATE_NOTIFIER = "false"` - Disables update notifications
+- `NPM_CONFIG_PROGRESS = "false"` - Disables progress bars
+- `NPM_CONFIG_PACKAGE_LOCK = "true"` - Ensures package-lock.json is used
 
 ### 7. Alternative Build Commands
 If the main build fails, try these alternatives:
