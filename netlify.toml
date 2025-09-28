@@ -1,6 +1,6 @@
 [build]
-  # Build command for Next.js - simple approach with CI=false
-  command = "npm install && npm run build"
+  # Build command for Next.js - using npm ci for better reliability
+  command = "npm ci && npm run build"
   
   # Output directory for Next.js build
   publish = ".next"
