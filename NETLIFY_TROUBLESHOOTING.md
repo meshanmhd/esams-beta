@@ -15,7 +15,9 @@
 **Solutions**:
 - Use `npm ci` instead of `npm install` for more reliable builds
 - Ensure all dependencies are properly listed in package.json
-- Check Node.js version compatibility (use Node 18)
+- Check Node.js version compatibility (use Node 18.20.4)
+- Verify TypeScript is installed as dev dependency
+- Check for any missing environment variables
 
 ### 3. Next.js Plugin Issues
 **Error**: Plugin-related build failures
@@ -42,8 +44,9 @@ NODE_ENV=production
 **Current Configuration**:
 - Build Command: `npm ci && npm run build`
 - Publish Directory: `.next`
-- Node Version: 18
+- Node Version: 18.20.4 (specified in .nvmrc)
 - Plugin: `@netlify/plugin-nextjs`
+- Environment: Production with telemetry disabled
 
 ### 6. Alternative Build Commands
 If the main build fails, try these alternatives:
@@ -70,7 +73,16 @@ If the main build fails, try these alternatives:
 4. Check for any missing environment variables
 5. Verify Node.js version compatibility
 
-### 8. Fallback Configuration
+### 8. Node.js Version Issues
+**Error**: Build failures related to Node.js version
+
+**Solutions**:
+- Ensure `.nvmrc` file contains `18.20.4`
+- Verify `netlify.toml` specifies `NODE_VERSION = "18.20.4"`
+- Use a stable LTS version of Node.js
+- Avoid using just "18" - be specific with the version number
+
+### 9. Fallback Configuration
 If the Next.js plugin causes issues, try this simplified netlify.toml:
 
 ```toml
@@ -89,9 +101,10 @@ If the Next.js plugin causes issues, try this simplified netlify.toml:
   status = 200
 ```
 
-### 9. Contact Support
+### 10. Contact Support
 If issues persist:
 1. Check Netlify's build logs for detailed error messages
 2. Verify all environment variables are set correctly
 3. Ensure the repository is properly connected to Netlify
 4. Try deploying from a different branch to test
+5. Use the fallback configuration if the main one fails

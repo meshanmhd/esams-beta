@@ -9,9 +9,13 @@
   # Next.js specific environment variables
   NEXT_TELEMETRY_DISABLED = "1"
   NODE_ENV = "production"
-  NODE_VERSION = "18"
+  NODE_VERSION = "18.20.4"
   # Ensure npm uses the correct registry
   NPM_CONFIG_REGISTRY = "https://registry.npmjs.org/"
+  # Additional build environment variables
+  CI = "true"
+  NPM_CONFIG_AUDIT = "false"
+  NPM_CONFIG_FUND = "false"
 
 # Netlify Next.js plugin
 [[plugins]]

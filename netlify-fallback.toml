@@ -1,0 +1,19 @@
+# Fallback configuration if the main one fails
+[build]
+  # Simplified build command
+  command = "npm install && npm run build"
+  
+  # Output directory for Next.js build
+  publish = ".next"
+
+[build.environment]
+  # Essential environment variables only
+  NODE_ENV = "production"
+  NODE_VERSION = "18.20.4"
+  NEXT_TELEMETRY_DISABLED = "1"
+
+# Redirects for SPA routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
