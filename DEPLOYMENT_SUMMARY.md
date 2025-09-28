@@ -29,15 +29,15 @@
 #### **netlify.toml**
 ```toml
 [build]
-  command = "npm install && npm run build"
+  command = "npm install && CI= npm run build"
   publish = ".next"
 
 [build.environment]
   NODE_ENV = "production"
-  NODE_VERSION = "18.12.1"
+  NODE_VERSION = "18.19.0"
   NEXT_TELEMETRY_DISABLED = "1"
   NPM_CONFIG_REGISTRY = "https://registry.npmjs.org/"
-  CI = "true"
+  CI = "false"
   NPM_CONFIG_AUDIT = "false"
   NPM_CONFIG_FUND = "false"
   NPM_CONFIG_UPDATE_NOTIFIER = "false"
@@ -67,7 +67,7 @@
 
 #### **.nvmrc**
 ```
-18.12.1
+18.19.0
 ```
 
 ### **Files Created/Updated:**

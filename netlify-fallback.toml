@@ -9,7 +9,7 @@
 [build.environment]
   # Essential environment variables only
   NODE_ENV = "production"
-  NODE_VERSION = "18.12.1"
+  NODE_VERSION = "18.19.0"
   NEXT_TELEMETRY_DISABLED = "1"
   # Additional fallback settings
   NPM_CONFIG_LEGACY_PEER_DEPS = "true"

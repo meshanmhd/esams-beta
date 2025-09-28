@@ -24,7 +24,7 @@
 **Solutions**:
 - Use `npm ci` instead of `npm install` for more reliable builds
 - Ensure all dependencies are properly listed in package.json
-- Check Node.js version compatibility (use Node 18.12.1)
+- Check Node.js version compatibility (use Node 18.19.0 or higher)
 - Verify TypeScript is installed as dev dependency
 - Check for any missing environment variables
 
@@ -53,7 +53,7 @@ NODE_ENV=production
 **Current Configuration**:
 - Build Command: `npm install && npm run build`
 - Publish Directory: `.next`
-- Node Version: 18.12.1 (specified in .nvmrc)
+- Node Version: 18.19.0 (specified in .nvmrc)
 - Plugin: `@netlify/plugin-nextjs`
 - Environment: Production with telemetry disabled
 - Additional: Optimized npm settings for better compatibility
@@ -94,12 +94,20 @@ If the main build fails, try these alternatives:
 **Error**: Build failures related to Node.js version
 
 **Solutions**:
-- Ensure `.nvmrc` file contains `18.12.1`
-- Verify `netlify.toml` specifies `NODE_VERSION = "18.12.1"`
+- Ensure `.nvmrc` file contains `18.19.0`
+- Verify `netlify.toml` specifies `NODE_VERSION = "18.19.0"`
 - Use a stable LTS version of Node.js
 - Avoid using just "18" - be specific with the version number
 
-### 10. Fallback Configuration
+### 10. CI Environment Variable Issues
+**Error**: `Command failed with exit code 1: npm run build` due to CI treating warnings as errors
+
+**Solutions**:
+- Set `CI = "false"` in `netlify.toml` environment variables
+- Use `CI= npm run build` in build commands to unset CI variable
+- This prevents ESLint warnings from being treated as build errors
+
+### 11. Fallback Configuration
 If the Next.js plugin causes issues, try this simplified netlify.toml:
 
 ```toml
@@ -118,7 +126,7 @@ If the Next.js plugin causes issues, try this simplified netlify.toml:
   status = 200
 ```
 
-### 11. Contact Support
+### 12. Contact Support
 If issues persist:
 1. Check Netlify's build logs for detailed error messages
 2. Verify all environment variables are set correctly
