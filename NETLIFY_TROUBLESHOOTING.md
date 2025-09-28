@@ -2,14 +2,22 @@
 
 ## Common Build Issues and Solutions
 
-### 1. TypeScript Module Not Found
+### 1. Package Lock File Sync Issues
+**Error**: `npm ci can only install packages when your package.json and package-lock.json are in sync`
+
+**Solution**: 
+- Delete the existing `package-lock.json` file: `rm package-lock.json`
+- Run `npm install` to regenerate the lock file
+- Commit the new `package-lock.json` to your repository
+
+### 2. TypeScript Module Not Found
 **Error**: `Cannot find module 'typescript'`
 
 **Solution**: 
 - Ensure TypeScript is installed as a dev dependency: `npm install typescript --save-dev`
 - Verify it's in package.json under devDependencies
 
-### 2. Build Command Fails with Exit Code 1/2
+### 3. Build Command Fails with Exit Code 1/2
 **Error**: `Command failed with exit code 1: npm run build`
 
 **Solutions**:
@@ -19,7 +27,7 @@
 - Verify TypeScript is installed as dev dependency
 - Check for any missing environment variables
 
-### 3. Next.js Plugin Issues
+### 4. Next.js Plugin Issues
 **Error**: Plugin-related build failures
 
 **Solutions**:
@@ -27,7 +35,7 @@
 - Configure plugin properly in netlify.toml
 - Use correct publish directory (`.next`)
 
-### 4. Environment Variables
+### 5. Environment Variables
 **Error**: Missing environment variables
 
 **Required Variables**:
@@ -40,7 +48,7 @@ NEXT_TELEMETRY_DISABLED=1
 NODE_ENV=production
 ```
 
-### 5. Build Configuration
+### 6. Build Configuration
 **Current Configuration**:
 - Build Command: `npm ci && npm run build`
 - Publish Directory: `.next`
@@ -48,7 +56,7 @@ NODE_ENV=production
 - Plugin: `@netlify/plugin-nextjs`
 - Environment: Production with telemetry disabled
 
-### 6. Alternative Build Commands
+### 7. Alternative Build Commands
 If the main build fails, try these alternatives:
 
 1. **Basic Build**:
@@ -66,14 +74,14 @@ If the main build fails, try these alternatives:
    rm -rf .next node_modules package-lock.json && npm install && npm run build
    ```
 
-### 7. Debugging Steps
+### 8. Debugging Steps
 1. Check Netlify build logs for specific error messages
 2. Verify all dependencies are installed correctly
 3. Ensure TypeScript is properly configured
 4. Check for any missing environment variables
 5. Verify Node.js version compatibility
 
-### 8. Node.js Version Issues
+### 9. Node.js Version Issues
 **Error**: Build failures related to Node.js version
 
 **Solutions**:
@@ -82,7 +90,7 @@ If the main build fails, try these alternatives:
 - Use a stable LTS version of Node.js
 - Avoid using just "18" - be specific with the version number
 
-### 9. Fallback Configuration
+### 10. Fallback Configuration
 If the Next.js plugin causes issues, try this simplified netlify.toml:
 
 ```toml
@@ -101,7 +109,7 @@ If the Next.js plugin causes issues, try this simplified netlify.toml:
   status = 200
 ```
 
-### 10. Contact Support
+### 11. Contact Support
 If issues persist:
 1. Check Netlify's build logs for detailed error messages
 2. Verify all environment variables are set correctly

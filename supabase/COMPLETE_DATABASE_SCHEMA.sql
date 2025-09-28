@@ -467,3 +467,4 @@ COMMENT ON COLUMN public.exam_allocations.seat_number IS 'Human-readable seat id
 -- 3. Run it to create the complete database
 -- 4. The system will be ready for use immediately
 -- =====================================================
+
