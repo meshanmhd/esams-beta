@@ -104,7 +104,7 @@ If the main build fails, try these alternatives:
 
 **Solutions**:
 - Set `CI = "false"` in `netlify.toml` environment variables
-- Use `CI= npm run build` in build commands to unset CI variable
+- Use simple build command: `npm install && npm run build`
 - This prevents ESLint warnings from being treated as build errors
 
 ### 11. Fallback Configuration

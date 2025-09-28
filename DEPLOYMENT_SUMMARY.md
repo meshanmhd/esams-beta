@@ -29,7 +29,7 @@
 #### **netlify.toml**
 ```toml
 [build]
-  command = "npm install && CI= npm run build"
+  command = "npm install && npm run build"
   publish = ".next"
 
 [build.environment]

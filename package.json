@@ -6,7 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "build:static": "next build && next export",
-    "build:netlify": "npm install && CI= npm run build",
+    "build:netlify": "npm install && npm run build",
     "build:clean": "rm -rf .next && npm install && npm run build",
     "start": "next start",
     "lint": "eslint",

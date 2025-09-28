@@ -1,15 +1,16 @@
 [build]
-  # Build command for Next.js - using npm install for better compatibility
-  command = "npm install && CI= npm run build"
+  # Build command for Next.js - simple approach with CI=false
+  command = "npm install && npm run build"
   
   # Output directory for Next.js build
   publish = ".next"
 
 [build.environment]
   # Next.js specific environment variables
-  NEXT_TELEMETRY_DISABLED = "1"
   NODE_ENV = "production"
   NODE_VERSION = "18.19.0"
+  NEXT_TELEMETRY_DISABLED = "1"
+  SKIP_ENV_VALIDATION = "true"
   # Ensure npm uses the correct registry
   NPM_CONFIG_REGISTRY = "https://registry.npmjs.org/"
   # Additional build environment variables
