@@ -16,10 +16,6 @@
 # Netlify Next.js plugin
 [[plugins]]
   package = "@netlify/plugin-nextjs"
-  [plugins.inputs]
-    # Enable Next.js plugin features
-    enableFunctions = true
-    enableEdgeFunctions = false
 
 # Redirects for SPA routing
 [[redirects]]
