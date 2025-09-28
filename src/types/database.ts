@@ -56,12 +56,18 @@ export interface CollisionGroup {
 export interface ExamHall {
   id: string
   name: string
-  building?: string
-  floor?: string
   capacity: number
-  layout_type: string
+  rows: number
+  columns: number
+  block?: string
+  floor?: string
+  building?: string
   location?: string
   description?: string
+  seating_type: 'single' | 'double'
+  layout_type: string
+  created_by?: string
+  updated_by?: string
   created_at: string
   updated_at: string
 }
@@ -73,9 +79,11 @@ export interface Seat {
   row_number?: number
   column_number?: number
   status: SeatStatus
+  student_id?: string
   created_at: string
   updated_at: string
   hall?: ExamHall
+  student?: Profile
 }
 
 export interface Exam {

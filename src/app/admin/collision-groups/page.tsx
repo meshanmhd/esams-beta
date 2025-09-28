@@ -96,7 +96,7 @@ export default function CollisionGroupsPage() {
         .insert({
           name: formData.name,
           description: formData.description,
-          created_by: user?.id // Add the current user's ID
+          created_by: profile?.id // Use profile ID instead of user ID
         })
         .select()
         .single()

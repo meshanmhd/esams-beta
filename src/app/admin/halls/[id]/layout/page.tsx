@@ -76,16 +76,16 @@ export default function HallLayoutPage() {
           student:profiles(full_name)
         `)
         .eq('hall_id', params.id)
-        .order('row', { ascending: true })
-        .order('column', { ascending: true })
+        .order('row_number', { ascending: true })
+        .order('column_number', { ascending: true })
 
       if (seatsError) throw seatsError
 
       const seats = seatsData?.map(seat => ({
         id: seat.id,
         number: seat.seat_number,
-        row: seat.row,
-        column: seat.column,
+        row: seat.row_number,
+        column: seat.column_number,
         status: seat.status,
         student_id: seat.student_id,
         student_name: seat.student?.full_name
@@ -155,8 +155,8 @@ export default function HallLayoutPage() {
         .from('seats')
         .insert({
           hall_id: params.id,
-          row: parseInt(newSeatData.row),
-          column: parseInt(newSeatData.column),
+          row_number: parseInt(newSeatData.row),
+          column_number: parseInt(newSeatData.column),
           seat_number: hall?.seats.length ? Math.max(...hall.seats.map(s => s.number)) + 1 : 1,
           status: newSeatData.status
         })

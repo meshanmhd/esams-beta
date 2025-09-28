@@ -14,11 +14,12 @@ export interface Student {
 export interface ExamHall {
   id: string
   name: string
-  building?: string
-  floor?: string
   capacity: number
   rows: number
   columns: number
+  block?: string
+  floor?: string
+  seating_type: 'single' | 'double'
   layout_type: string
 }
 
@@ -30,6 +31,8 @@ export interface Seat {
   student_id?: string
   student?: Student
   is_occupied: boolean
+  seating_type: 'single' | 'double'
+  bench_position?: 'left' | 'right' // For double seating
 }
 
 export interface CollisionGroup {
@@ -115,14 +118,40 @@ export class SeatAllocator {
       
       for (let row = 1; row <= hall.rows; row++) {
         for (let col = 1; col <= hall.columns; col++) {
-          seats.push({
-            id: `${hall.id}-${row}-${col}`,
-            row_number: row,
-            column_number: col,
-            seat_number: seatNumber.toString().padStart(3, '0'),
-            is_occupied: false
-          })
-          seatNumber++
+          if (hall.seating_type === 'double') {
+            // For double seating, create two seats per position (left and right)
+            seats.push({
+              id: `${hall.id}-${row}-${col}-left`,
+              row_number: row,
+              column_number: col,
+              seat_number: seatNumber.toString().padStart(3, '0'),
+              is_occupied: false,
+              seating_type: 'double',
+              bench_position: 'left'
+            })
+            seatNumber++
+            seats.push({
+              id: `${hall.id}-${row}-${col}-right`,
+              row_number: row,
+              column_number: col,
+              seat_number: seatNumber.toString().padStart(3, '0'),
+              is_occupied: false,
+              seating_type: 'double',
+              bench_position: 'right'
+            })
+            seatNumber++
+          } else {
+            // For single seating, one seat per position
+            seats.push({
+              id: `${hall.id}-${row}-${col}`,
+              row_number: row,
+              column_number: col,
+              seat_number: seatNumber.toString().padStart(3, '0'),
+              is_occupied: false,
+              seating_type: 'single'
+            })
+            seatNumber++
+          }
         }
       }
       
@@ -225,6 +254,24 @@ export class SeatAllocator {
       }
     }
 
+    // For double seating, check if the other seat on the same bench is occupied by a student from the same collision group
+    if (seat.seating_type === 'double' && seat.bench_position) {
+      const otherBenchSeat = allSeats.find(s => 
+        s.row_number === seat.row_number && 
+        s.column_number === seat.column_number && 
+        s.seating_type === 'double' && 
+        s.bench_position !== seat.bench_position
+      )
+      
+      if (otherBenchSeat && otherBenchSeat.student) {
+        for (const collisionGroup of relevantCollisionGroups) {
+          if (collisionGroup.departments.includes(otherBenchSeat.student.department_id)) {
+            return false // Collision detected on same bench
+          }
+        }
+      }
+    }
+
     return true
   }
 
@@ -241,38 +288,38 @@ export class SeatAllocator {
 
     // Check left seat
     if (seat.column_number > 1) {
-      const leftSeat = allSeats.find(s => 
+      const leftSeats = allSeats.filter(s => 
         s.row_number === seat.row_number && 
         s.column_number === seat.column_number - 1
       )
-      if (leftSeat) adjacent.push(leftSeat)
+      adjacent.push(...leftSeats)
     }
 
     // Check right seat
     if (seat.column_number < hall.columns) {
-      const rightSeat = allSeats.find(s => 
+      const rightSeats = allSeats.filter(s => 
         s.row_number === seat.row_number && 
         s.column_number === seat.column_number + 1
       )
-      if (rightSeat) adjacent.push(rightSeat)
+      adjacent.push(...rightSeats)
     }
 
     // Check front seat
     if (seat.row_number > 1) {
-      const frontSeat = allSeats.find(s => 
+      const frontSeats = allSeats.filter(s => 
         s.row_number === seat.row_number - 1 && 
         s.column_number === seat.column_number
       )
-      if (frontSeat) adjacent.push(frontSeat)
+      adjacent.push(...frontSeats)
     }
 
     // Check back seat
     if (seat.row_number < hall.rows) {
-      const backSeat = allSeats.find(s => 
+      const backSeats = allSeats.filter(s => 
         s.row_number === seat.row_number + 1 && 
         s.column_number === seat.column_number
       )
-      if (backSeat) adjacent.push(backSeat)
+      adjacent.push(...backSeats)
     }
 
     return adjacent

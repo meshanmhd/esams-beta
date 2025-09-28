@@ -60,12 +60,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('Fetching profile for user:', userId)
       
-      // For admin users, fetch by auth_user_id
-      const { data: profileData, error: profileError } = await supabase
+      // Try to fetch by auth_user_id first (for admin users)
+      let { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('auth_user_id', userId)
         .single()
+      
+      // If not found, try to fetch by id (for student users)
+      if (profileError && profileError.code === 'PGRST116') {
+        const { data: profileDataById, error: profileErrorById } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single()
+        
+        profileData = profileDataById
+        profileError = profileErrorById
+      }
       
       if (profileError) {
         console.error('Error fetching profile:', profileError)

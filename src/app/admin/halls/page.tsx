@@ -20,14 +20,12 @@ import { supabase } from '@/lib/supabase'
 interface ExamHall {
   id: string
   name: string
-  building?: string
-  floor?: string
   capacity: number
   rows: number
   columns: number
   block?: string
-  location?: string
-  description?: string
+  floor?: string
+  seating_type: 'single' | 'double'
 }
 
 export default function ExamHallsPage() {
@@ -36,17 +34,16 @@ export default function ExamHallsPage() {
   const [halls, setHalls] = useState<ExamHall[]>([])
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [isLayoutDialogOpen, setIsLayoutDialogOpen] = useState(false)
   const [editingHall, setEditingHall] = useState<ExamHall | null>(null)
+  const [selectedHallForLayout, setSelectedHallForLayout] = useState<ExamHall | null>(null)
   const [formData, setFormData] = useState({
     name: '',
-    building: '',
-    floor: '',
-    capacity: '',
     rows: '',
     columns: '',
     block: '',
-    location: '',
-    description: ''
+    floor: '',
+    seating_type: 'single' as 'single' | 'double'
   })
   const [searchTerm, setSearchTerm] = useState('')
 
@@ -93,14 +90,11 @@ export default function ExamHallsPage() {
         .from('exam_halls')
         .insert({
           name: formData.name,
-          building: formData.building,
-          floor: formData.floor,
-          capacity: parseInt(formData.capacity),
           rows: parseInt(formData.rows),
           columns: parseInt(formData.columns),
           block: formData.block,
-          location: formData.location,
-          description: formData.description,
+          floor: formData.floor,
+          seating_type: formData.seating_type,
           created_by: user?.id
         })
         .select()
@@ -111,14 +105,11 @@ export default function ExamHallsPage() {
       // Reset form data
       setFormData({
         name: '',
-        building: '',
-        floor: '',
-        capacity: '',
         rows: '',
         columns: '',
         block: '',
-        location: '',
-        description: ''
+        floor: '',
+        seating_type: 'single'
       })
       setIsCreateDialogOpen(false)
       
@@ -137,14 +128,11 @@ export default function ExamHallsPage() {
         .from('exam_halls')
         .update({
           name: formData.name,
-          building: formData.building,
-          floor: formData.floor,
-          capacity: parseInt(formData.capacity),
           rows: parseInt(formData.rows),
           columns: parseInt(formData.columns),
           block: formData.block,
-          location: formData.location,
-          description: formData.description,
+          floor: formData.floor,
+          seating_type: formData.seating_type,
           updated_by: user?.id
         })
         .eq('id', editingHall.id)
@@ -154,14 +142,11 @@ export default function ExamHallsPage() {
       setEditingHall(null)
       setFormData({
         name: '',
-        building: '',
-        floor: '',
-        capacity: '',
         rows: '',
         columns: '',
         block: '',
-        location: '',
-        description: ''
+        floor: '',
+        seating_type: 'single'
       })
       setIsEditDialogOpen(false)
       fetchHalls()
@@ -189,23 +174,25 @@ export default function ExamHallsPage() {
     setEditingHall(hall)
     setFormData({
       name: hall.name,
-      building: hall.building || '',
-      floor: hall.floor || '',
-      capacity: hall.capacity.toString(),
       rows: hall.rows.toString(),
       columns: hall.columns.toString(),
       block: hall.block || '',
-      location: hall.location || '',
-      description: hall.description || ''
+      floor: hall.floor || '',
+      seating_type: hall.seating_type
     })
     setIsEditDialogOpen(true)
+  }
+
+  const openLayoutDialog = (hall: ExamHall) => {
+    setSelectedHallForLayout(hall)
+    setIsLayoutDialogOpen(true)
   }
 
   const getFilteredHalls = () => {
     return halls.filter(hall =>
       hall.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      hall.building?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      hall.location?.toLowerCase().includes(searchTerm.toLowerCase())
+      hall.block?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      hall.floor?.toLowerCase().includes(searchTerm.toLowerCase())
     )
   }
 
@@ -248,24 +235,26 @@ export default function ExamHallsPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="capacity">Capacity *</Label>
-                    <Input
-                      id="capacity"
-                      type="number"
-                      value={formData.capacity}
-                      onChange={(e) => setFormData({...formData, capacity: e.target.value})}
-                      placeholder="100"
-                    />
+                    <Label htmlFor="seating_type">Seating Type *</Label>
+                    <Select value={formData.seating_type} onValueChange={(value) => setFormData({...formData, seating_type: value as 'single' | 'double'})}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="single">Single Seated (1 student per seat)</SelectItem>
+                        <SelectItem value="double">Double Seated (2 students per bench)</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="building">Building</Label>
+                    <Label htmlFor="block">Block</Label>
                     <Input
-                      id="building"
-                      value={formData.building}
-                      onChange={(e) => setFormData({...formData, building: e.target.value})}
-                      placeholder="e.g., Main Building"
+                      id="block"
+                      value={formData.block}
+                      onChange={(e) => setFormData({...formData, block: e.target.value})}
+                      placeholder="e.g., Block A"
                     />
                   </div>
                   <div className="space-y-2">
@@ -280,7 +269,7 @@ export default function ExamHallsPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="rows">Number of Rows</Label>
+                    <Label htmlFor="rows">Number of Rows *</Label>
                     <Input
                       id="rows"
                       type="number"
@@ -290,7 +279,7 @@ export default function ExamHallsPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="columns">Number of Columns</Label>
+                    <Label htmlFor="columns">Number of Columns *</Label>
                     <Input
                       id="columns"
                       type="number"
@@ -300,41 +289,22 @@ export default function ExamHallsPage() {
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="block">Block</Label>
-                    <Input
-                      id="block"
-                      value={formData.block}
-                      onChange={(e) => setFormData({...formData, block: e.target.value})}
-                      placeholder="e.g., Block A"
-                    />
+                <div className="p-3 bg-blue-50 rounded-lg">
+                  <div className="text-sm font-medium text-blue-900">
+                    Calculated Capacity: {formData.rows && formData.columns ? 
+                      (parseInt(formData.rows) * parseInt(formData.columns) * (formData.seating_type === 'double' ? 2 : 1)) 
+                      : 0} seats
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="location">Location</Label>
-                    <Input
-                      id="location"
-                      value={formData.location}
-                      onChange={(e) => setFormData({...formData, location: e.target.value})}
-                      placeholder="e.g., Main Campus"
-                    />
+                  <div className="text-xs text-blue-700">
+                    {formData.seating_type === 'double' ? 'Double seating: 2 students per bench' : 'Single seating: 1 student per seat'}
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Input
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
-                    placeholder="Additional details about the hall"
-                  />
                 </div>
               </div>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleCreateHall} disabled={!formData.name || !formData.capacity}>
+                <Button onClick={handleCreateHall} disabled={!formData.name || !formData.rows || !formData.columns}>
                   Create Hall
                 </Button>
               </div>
@@ -364,18 +334,24 @@ export default function ExamHallsPage() {
                   <div>
                     <CardTitle className="text-xl">{hall.name}</CardTitle>
                     <CardDescription className="text-base">
-                      {hall.block && hall.building && hall.floor ? `${hall.block}, ${hall.building}, ${hall.floor}` : hall.location}
+                      {hall.block && hall.floor ? `${hall.block}, ${hall.floor}` : 'No location specified'}
                     </CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary">
                       {hall.rows}×{hall.columns}
                     </Badge>
-                    <Link href={`/admin/halls/${hall.id}/layout`}>
-                      <Button variant="outline" size="sm" className="rounded-lg">
-                        Layout
-                      </Button>
-                    </Link>
+                    <Badge variant="outline">
+                      {hall.seating_type === 'double' ? 'Double' : 'Single'}
+                    </Badge>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="rounded-lg"
+                      onClick={() => openLayoutDialog(hall)}
+                    >
+                      Layout
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
@@ -412,15 +388,10 @@ export default function ExamHallsPage() {
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-gray-500" />
                     <span className="text-sm text-gray-600 dark:text-gray-300">
-                      {hall.location || 'No location specified'}
+                      {hall.seating_type === 'double' ? 'Double Seated' : 'Single Seated'}
                     </span>
                   </div>
                 </div>
-                {hall.description && (
-                  <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">
-                    {hall.description}
-                  </p>
-                )}
               </CardContent>
             </Card>
           ))}
@@ -467,24 +438,26 @@ export default function ExamHallsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-capacity">Capacity *</Label>
-                  <Input
-                    id="edit-capacity"
-                    type="number"
-                    value={formData.capacity}
-                    onChange={(e) => setFormData({...formData, capacity: e.target.value})}
-                    placeholder="100"
-                  />
+                  <Label htmlFor="edit-seating_type">Seating Type *</Label>
+                  <Select value={formData.seating_type} onValueChange={(value) => setFormData({...formData, seating_type: value as 'single' | 'double'})}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="single">Single Seated (1 student per seat)</SelectItem>
+                      <SelectItem value="double">Double Seated (2 students per bench)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-building">Building</Label>
+                  <Label htmlFor="edit-block">Block</Label>
                   <Input
-                    id="edit-building"
-                    value={formData.building}
-                    onChange={(e) => setFormData({...formData, building: e.target.value})}
-                    placeholder="e.g., Main Building"
+                    id="edit-block"
+                    value={formData.block}
+                    onChange={(e) => setFormData({...formData, block: e.target.value})}
+                    placeholder="e.g., Block A"
                   />
                 </div>
                 <div className="space-y-2">
@@ -499,7 +472,7 @@ export default function ExamHallsPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-rows">Number of Rows</Label>
+                  <Label htmlFor="edit-rows">Number of Rows *</Label>
                   <Input
                     id="edit-rows"
                     type="number"
@@ -509,7 +482,7 @@ export default function ExamHallsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-columns">Number of Columns</Label>
+                  <Label htmlFor="edit-columns">Number of Columns *</Label>
                   <Input
                     id="edit-columns"
                     type="number"
@@ -519,44 +492,124 @@ export default function ExamHallsPage() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-block">Block</Label>
-                  <Input
-                    id="edit-block"
-                    value={formData.block}
-                    onChange={(e) => setFormData({...formData, block: e.target.value})}
-                    placeholder="e.g., Block A"
-                  />
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <div className="text-sm font-medium text-blue-900">
+                  Calculated Capacity: {formData.rows && formData.columns ? 
+                    (parseInt(formData.rows) * parseInt(formData.columns) * (formData.seating_type === 'double' ? 2 : 1)) 
+                    : 0} seats
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-location">Location</Label>
-                  <Input
-                    id="edit-location"
-                    value={formData.location}
-                    onChange={(e) => setFormData({...formData, location: e.target.value})}
-                    placeholder="e.g., Main Campus"
-                  />
+                <div className="text-xs text-blue-700">
+                  {formData.seating_type === 'double' ? 'Double seating: 2 students per bench' : 'Single seating: 1 student per seat'}
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-description">Description</Label>
-                <Input
-                  id="edit-description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  placeholder="Additional details about the hall"
-                />
               </div>
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleEditHall} disabled={!formData.name || !formData.capacity}>
+              <Button onClick={handleEditHall} disabled={!formData.name || !formData.rows || !formData.columns}>
                 Update Hall
               </Button>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Layout Dialog */}
+        <Dialog open={isLayoutDialogOpen} onOpenChange={setIsLayoutDialogOpen}>
+          <DialogContent className="max-w-4xl bg-white rounded-xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold">
+                {selectedHallForLayout?.name} Layout
+              </DialogTitle>
+              <DialogDescription>
+                {selectedHallForLayout?.capacity} seats • {selectedHallForLayout?.seating_type === 'double' ? 'double bench' : 'single bench'} • {selectedHallForLayout?.block} • {selectedHallForLayout?.floor}
+              </DialogDescription>
+            </DialogHeader>
+            
+            {selectedHallForLayout && (
+              <div className="py-4">
+                {/* Teacher's Desk */}
+                <div className="mb-6 text-center">
+                  <div className="inline-block bg-gray-800 text-white px-8 py-4 rounded-lg font-medium">
+                    Teacher's Desk / Board
+                  </div>
+                </div>
+
+                {/* Seat Grid */}
+                <div className="space-y-2">
+                  {Array.from({ length: selectedHallForLayout.rows }, (_, rowIndex) => (
+                    <div key={rowIndex} className="flex items-center gap-3">
+                      <div className="w-8 text-sm font-medium text-gray-600">
+                        R{rowIndex + 1}
+                      </div>
+                      <div className="flex gap-2">
+                        {Array.from({ length: selectedHallForLayout.columns }, (_, colIndex) => {
+                          const seatNumber = rowIndex * selectedHallForLayout.columns + colIndex + 1
+                          const isDoubleSeating = selectedHallForLayout.seating_type === 'double'
+                          
+                          return (
+                            <div key={colIndex} className="flex gap-1">
+                              {isDoubleSeating ? (
+                                // Double seating - two seats per position
+                                <>
+                                  <div className="w-8 h-8 bg-green-100 border border-green-300 rounded text-xs flex items-center justify-center font-mono">
+                                    {seatNumber * 2 - 1}
+                                  </div>
+                                  <div className="w-8 h-8 bg-green-100 border border-green-300 rounded text-xs flex items-center justify-center font-mono">
+                                    {seatNumber * 2}
+                                  </div>
+                                </>
+                              ) : (
+                                // Single seating - one seat per position
+                                <div className="w-8 h-8 bg-green-100 border border-green-300 rounded text-xs flex items-center justify-center font-mono">
+                                  {seatNumber}
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Legend */}
+                <div className="mt-6 flex justify-center gap-6 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 bg-green-100 border border-green-300 rounded"></div>
+                    <span>Available Seats</span>
+                  </div>
+                  {selectedHallForLayout.seating_type === 'double' && (
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-4 bg-green-100 border border-green-300 rounded"></div>
+                      <span>Double Bench (2 seats)</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Hall Stats */}
+                <div className="mt-6 grid grid-cols-3 gap-4 text-center">
+                  <div className="bg-green-50 rounded-lg p-4">
+                    <div className="text-2xl font-bold text-green-600">
+                      {selectedHallForLayout.capacity}
+                    </div>
+                    <div className="text-sm text-green-600">Total Capacity</div>
+                  </div>
+                  <div className="bg-blue-50 rounded-lg p-4">
+                    <div className="text-2xl font-bold text-blue-600">
+                      {selectedHallForLayout.rows}
+                    </div>
+                    <div className="text-sm text-blue-600">Rows</div>
+                  </div>
+                  <div className="bg-purple-50 rounded-lg p-4">
+                    <div className="text-2xl font-bold text-purple-600">
+                      {selectedHallForLayout.columns}
+                    </div>
+                    <div className="text-sm text-purple-600">Columns</div>
+                  </div>
+                </div>
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>

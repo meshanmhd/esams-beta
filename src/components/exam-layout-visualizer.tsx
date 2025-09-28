@@ -33,6 +33,8 @@ interface Seat {
   seat_number: string
   student: Student | null
   is_occupied: boolean
+  seating_type: 'single' | 'double'
+  bench_position?: 'left' | 'right'
 }
 
 interface HallLayout {
@@ -82,51 +84,94 @@ export function ExamLayoutVisualizer({ layouts, onClose }: ExamLayoutVisualizerP
   const emptySeats = currentLayout.seats.filter(seat => !seat.is_occupied)
   const departments = [...new Set(occupiedSeats.map(seat => seat.student?.department).filter(Boolean))]
 
-  const renderGridView = () => (
-    <div className="space-y-4">
-      <div className="text-sm text-gray-600 mb-4">
-        {occupiedSeats.length} of {currentLayout.seats.length} seats occupied
-      </div>
-      
-      <div 
-        className="grid gap-1 p-4 border rounded-lg bg-gray-50"
-        style={{ 
-          gridTemplateColumns: `repeat(${currentLayout.columns}, 1fr)`,
-          maxWidth: '100%',
-          overflow: 'auto'
-        }}
-      >
-        {filteredSeats.map((seat) => (
-          <div
-            key={seat.id}
-            className={`
-              aspect-square min-w-[60px] min-h-[60px] border rounded flex flex-col items-center justify-center text-xs
-              transition-all duration-200 hover:scale-105
-              ${seat.is_occupied 
-                ? 'bg-blue-100 border-blue-300 text-blue-900' 
-                : 'bg-gray-100 border-gray-300 text-gray-500'
-              }
-            `}
-            title={seat.student ? `${seat.student.name} (${seat.student.roll_number})` : `Seat ${seat.seat_number}`}
-          >
-            <div className="font-mono text-[10px] text-gray-500">
-              {seat.seat_number}
-            </div>
-            {seat.student && (
-              <div className="text-center">
-                <div className="font-medium truncate max-w-[50px]">
-                  {seat.student.roll_number}
-                </div>
-                <div className="text-[9px] text-gray-600 truncate max-w-[50px]">
-                  {seat.student.name.split(' ')[0]}
-                </div>
+  const renderGridView = () => {
+    // Group seats by position for double seating visualization
+    const seatGroups = new Map<string, Seat[]>()
+    
+    filteredSeats.forEach(seat => {
+      const positionKey = `${seat.row}-${seat.column}`
+      if (!seatGroups.has(positionKey)) {
+        seatGroups.set(positionKey, [])
+      }
+      seatGroups.get(positionKey)!.push(seat)
+    })
+
+    return (
+      <div className="space-y-4">
+        <div className="text-sm text-gray-600 mb-4">
+          {occupiedSeats.length} of {currentLayout.seats.length} seats occupied
+        </div>
+        
+        <div 
+          className="grid gap-1 p-4 border rounded-lg bg-gray-50"
+          style={{ 
+            gridTemplateColumns: `repeat(${currentLayout.columns}, 1fr)`,
+            maxWidth: '100%',
+            overflow: 'auto'
+          }}
+        >
+          {Array.from(seatGroups.entries()).map(([positionKey, seats]) => {
+            const firstSeat = seats[0]
+            const isDoubleSeating = firstSeat.seating_type === 'double'
+            
+            return (
+              <div
+                key={positionKey}
+                className={`
+                  ${isDoubleSeating ? 'aspect-[2/1]' : 'aspect-square'} 
+                  min-w-[60px] min-h-[60px] border rounded flex items-center justify-center text-xs
+                  transition-all duration-200 hover:scale-105
+                  ${seats.some(s => s.is_occupied) 
+                    ? 'bg-blue-100 border-blue-300 text-blue-900' 
+                    : 'bg-gray-100 border-gray-300 text-gray-500'
+                  }
+                `}
+                title={seats.map(s => s.student ? `${s.student.name} (${s.student.roll_number})` : `Seat ${s.seat_number}`).join(', ')}
+              >
+                {isDoubleSeating ? (
+                  <div className="flex w-full h-full">
+                    {seats.map(seat => (
+                      <div key={seat.id} className="flex-1 flex flex-col items-center justify-center border-r last:border-r-0">
+                        <div className="font-mono text-[8px] text-gray-500">
+                          {seat.seat_number}
+                        </div>
+                        {seat.student && (
+                          <div className="text-center">
+                            <div className="font-medium truncate max-w-[25px] text-[8px]">
+                              {seat.student.roll_number}
+                            </div>
+                            <div className="text-[7px] text-gray-600 truncate max-w-[25px]">
+                              {seat.student.name.split(' ')[0]}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="font-mono text-[10px] text-gray-500">
+                      {firstSeat.seat_number}
+                    </div>
+                    {firstSeat.student && (
+                      <div className="text-center">
+                        <div className="font-medium truncate max-w-[50px]">
+                          {firstSeat.student.roll_number}
+                        </div>
+                        <div className="text-[9px] text-gray-600 truncate max-w-[50px]">
+                          {firstSeat.student.name.split(' ')[0]}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        ))}
+            )
+          })}
+        </div>
       </div>
-    </div>
-  )
+    )
+  }
 
   const renderListView = () => (
     <div className="space-y-2">
@@ -152,6 +197,9 @@ export function ExamLayoutVisualizer({ layouts, onClose }: ExamLayoutVisualizerP
               </div>
               <div className="text-sm">
                 Row {seat.row}, Column {seat.column}
+                {seat.seating_type === 'double' && seat.bench_position && (
+                  <span className="text-xs text-gray-500"> ({seat.bench_position})</span>
+                )}
               </div>
             </div>
             {seat.student ? (

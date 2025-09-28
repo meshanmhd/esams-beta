@@ -62,9 +62,12 @@ interface Department {
 interface ExamHall {
   id: string
   name: string
-  building?: string
-  floor?: string
   capacity: number
+  rows: number
+  columns: number
+  block?: string
+  floor?: string
+  seating_type: 'single' | 'double'
   layout_type: string
 }
 
@@ -312,11 +315,12 @@ export default function CreateExamPage() {
         return {
           id: hall!.id,
           name: hall!.name,
-          building: hall!.building,
-          floor: hall!.floor,
           capacity: hall!.capacity,
           rows: hall!.rows,
           columns: hall!.columns,
+          block: hall!.block,
+          floor: hall!.floor,
+          seating_type: hall!.seating_type,
           layout_type: hall!.layout_type || 'standard'
         }
       })
@@ -460,7 +464,7 @@ export default function CreateExamPage() {
                       <Label htmlFor={`hall-${hall.id}`} className="cursor-pointer">
                         <div className="font-medium">{hall.name}</div>
                         <div className="text-sm text-gray-600">
-                          {hall.building} • {hall.floor} • {hall.capacity} seats
+                          {hall.block} • {hall.floor} • {hall.capacity} seats • {hall.seating_type === 'double' ? 'Double' : 'Single'} seating
                         </div>
                       </Label>
                     </div>
@@ -863,11 +867,12 @@ export default function CreateExamPage() {
                   return {
                     id: hall!.id,
                     name: hall!.name,
-                    building: hall!.building,
-                    floor: hall!.floor,
                     capacity: hall!.capacity,
                     rows: hall!.rows,
                     columns: hall!.columns,
+                    block: hall!.block,
+                    floor: hall!.floor,
+                    seating_type: hall!.seating_type,
                     layout_type: hall!.layout_type || 'standard'
                   }
                 }))}
