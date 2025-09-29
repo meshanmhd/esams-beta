@@ -154,19 +154,41 @@ The system uses the following main entities:
 
 ### Vercel (Recommended)
 
-1. Push your code to GitHub
-2. Connect your repository to Vercel
-3. Add environment variables in Vercel dashboard
-4. Deploy!
+This project is fully optimized for Vercel deployment. Follow these steps:
 
-### Environment Variables for Production
+1. **Push your code to GitHub**
+2. **Connect to Vercel**:
+   - Go to [vercel.com](https://vercel.com)
+   - Click "New Project"
+   - Import your GitHub repository
+   - Vercel will auto-detect Next.js configuration
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=your_production_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_production_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_production_service_role_key
-NEXT_PUBLIC_APP_URL=https://your-domain.com
-```
+3. **Set Environment Variables** in Vercel dashboard:
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=your_production_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_production_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_production_service_role_key
+   NEXT_PUBLIC_APP_URL=https://your-project-name.vercel.app
+   NEXT_TELEMETRY_DISABLED=1
+   ```
+
+4. **Deploy!** - Vercel will automatically build and deploy your application
+
+### Configuration Files
+
+- `vercel.json` - Vercel deployment configuration
+- `next.config.ts` - Next.js configuration optimized for Vercel
+- `VERCEL_DEPLOYMENT.md` - Detailed deployment guide
+
+### Features
+
+- ✅ **Automatic deployments** on every push
+- ✅ **Preview deployments** for pull requests  
+- ✅ **Global CDN** for fast loading
+- ✅ **Image optimization** built-in
+- ✅ **Edge functions** support
+- ✅ **Automatic HTTPS**
+- ✅ **Security headers** configured
 
 ## Contributing
 

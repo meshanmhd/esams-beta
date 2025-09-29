@@ -1,10 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Regular build for Netlify
-  trailingSlash: true,
+  // Optimized for Vercel deployment
   images: {
-    unoptimized: true, // Required for static export
+    // Use Vercel's image optimization
+    formats: ['image/webp', 'image/avif'],
   },
 
   // Exclude MCP server directory from build
@@ -17,19 +17,26 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-avatar', '@radix-ui/react-dialog'],
   },
 
-  // Compress output
+  // Enable compression
   compress: true,
 
-  // Disable telemetry (handled via environment variable)
+  // TypeScript configuration
   typescript: {
-    // Ignore TypeScript errors during build for Netlify compatibility
-    ignoreBuildErrors: true,
+    // Allow TypeScript errors during build for faster deployment
+    ignoreBuildErrors: false,
   },
   
+  // ESLint configuration
   eslint: {
-    // Ignore ESLint errors during build for Netlify compatibility
-    ignoreDuringBuilds: true,
+    // Allow ESLint errors during build for faster deployment
+    ignoreDuringBuilds: false,
   },
+
+  // Vercel-specific optimizations
+  poweredByHeader: false,
+  
+  // Enable React strict mode
+  reactStrictMode: true,
 };
 
 export default nextConfig;
