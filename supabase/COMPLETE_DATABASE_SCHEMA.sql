@@ -469,3 +469,5 @@ COMMENT ON COLUMN public.exam_allocations.seat_number IS 'Human-readable seat id
 -- =====================================================
 
 
+
+
